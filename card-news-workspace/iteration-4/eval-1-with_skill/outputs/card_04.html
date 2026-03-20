@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 작동 원리 - 04 일상 속 AI</title>
+<style>
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-1Thin.ttf') format('truetype'); font-weight: 100; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-2ExtraLight.ttf') format('truetype'); font-weight: 200; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-3Light.ttf') format('truetype'); font-weight: 300; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-4Regular.ttf') format('truetype'); font-weight: 400; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-5Medium.ttf') format('truetype'); font-weight: 500; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-6SemiBold.ttf') format('truetype'); font-weight: 600; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-7Bold.ttf') format('truetype'); font-weight: 700; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-8ExtraBold.ttf') format('truetype'); font-weight: 800; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-9Black.ttf') format('truetype'); font-weight: 900; }
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f0f0; font-family: 'Paperlogy', sans-serif; }
+
+:root {
+    --bg: #0B1120;
+    --primary: #0ff4f4;
+    --accent: #00D4AA;
+    --neutral: #1A2340;
+    --text: #FFFFFF;
+    --dim: #6B7A99;
+    --pad: 50px;
+}
+
+.card {
+    position: relative;
+    width: 1080px;
+    height: 1350px;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    word-break: keep-all;
+}
+
+.bg-gradient {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background:
+        radial-gradient(ellipse at 50% 50%, rgba(0, 212, 170, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(15, 244, 244, 0.06) 0%, transparent 40%),
+        linear-gradient(180deg, #0D1A2F 0%, #0B1120 100%);
+    z-index: 0;
+}
+
+.watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Paperlogy', sans-serif;
+    font-weight: 900;
+    font-size: 160px;
+    color: rgba(255, 255, 255, 0.025);
+    white-space: nowrap;
+    z-index: 0;
+    pointer-events: none;
+    user-select: none;
+    letter-spacing: -0.03em;
+}
+
+.progress-bar {
+    position: absolute;
+    top: 0; left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    z-index: 10;
+    width: 80%;
+}
+
+.anchor-tl {
+    position: absolute;
+    top: 36px; left: var(--pad);
+    font-weight: 600;
+    font-size: 18px;
+    color: rgba(255,255,255,0.5);
+    z-index: 10;
+    letter-spacing: 0.05em;
+}
+.anchor-tr {
+    position: absolute;
+    top: 36px; right: var(--pad);
+    font-weight: 300;
+    font-size: 18px;
+    color: rgba(255,255,255,0.4);
+    z-index: 10;
+}
+
+.card-num {
+    font-weight: 900;
+    font-size: 120px;
+    color: rgba(15, 244, 244, 0.08);
+    position: absolute;
+    top: 70px;
+    right: var(--pad);
+    z-index: 1;
+    line-height: 1;
+    letter-spacing: -0.05em;
+}
+
+.content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 90px var(--pad) 70px var(--pad);
+}
+
+.title-area {
+    margin-bottom: 24px;
+}
+.title-area .divider {
+    width: 50px;
+    height: 3px;
+    background: var(--primary);
+    margin-bottom: 20px;
+}
+.title-area h2 {
+    font-weight: 800;
+    font-size: 50px;
+    line-height: 1.2;
+    letter-spacing: -0.04em;
+}
+.title-area h2 .hl {
+    color: var(--primary);
+}
+
+/* Center section: illustration + surrounding items */
+.center-section {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.illustration-center {
+    position: relative;
+    z-index: 2;
+}
+.illustration-center img {
+    width: 440px;
+    height: 440px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 30px rgba(15, 244, 244, 0.2)) drop-shadow(0 0 60px rgba(0,212,170,0.1));
+}
+
+/* Floating use-case badges around the illustration */
+.use-case {
+    position: absolute;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 16px 22px;
+    backdrop-filter: blur(10px);
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.use-case .uc-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: rgba(15, 244, 244, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.use-case .uc-icon svg { width: 22px; height: 22px; }
+.use-case .uc-text {
+    font-weight: 600;
+    font-size: 20px;
+    color: #FFFFFF;
+    line-height: 1.3;
+}
+.use-case .uc-sub {
+    font-weight: 400;
+    font-size: 16px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 2px;
+}
+
+.uc-1 { top: 30px; left: 0; }
+.uc-2 { top: 30px; right: 0; }
+.uc-3 { bottom: 80px; left: 0; }
+.uc-4 { bottom: 80px; right: 0; }
+
+/* Bottom summary */
+.summary-bar {
+    background: rgba(15, 244, 244, 0.06);
+    border: 1px solid rgba(15, 244, 244, 0.15);
+    border-radius: 20px;
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+}
+.summary-bar .sum-text {
+    font-weight: 500;
+    font-size: 22px;
+    color: rgba(255,255,255,0.8);
+    line-height: 1.5;
+}
+.summary-bar .sum-text .hl {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.deco-dots {
+    position: absolute;
+    bottom: 36px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+}
+.deco-dots .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+}
+.deco-dots .dot.active {
+    width: 28px;
+    border-radius: 4px;
+    background: var(--primary);
+}
+
+.corner-mark {
+    position: absolute;
+    width: 24px; height: 24px;
+    z-index: 10;
+}
+.corner-mark.bl { bottom: 36px; left: var(--pad); border-left: 2px solid rgba(255,255,255,0.1); border-bottom: 2px solid rgba(255,255,255,0.1); }
+.corner-mark.br { bottom: 36px; right: var(--pad); border-right: 2px solid rgba(255,255,255,0.1); border-bottom: 2px solid rgba(255,255,255,0.1); }
+</style>
+</head>
+<body>
+<div class="card">
+    <div class="bg-gradient"></div>
+    <div class="watermark">DAILY AI</div>
+    <div class="progress-bar"></div>
+    <div class="card-num">04</div>
+
+    <div class="anchor-tl">AI EXPLAINED</div>
+    <div class="anchor-tr"><span style="font-weight:600;color:rgba(255,255,255,0.7);">04</span> <span style="color:rgba(255,255,255,0.3);">/ 05</span></div>
+
+    <div class="content">
+        <div class="title-area">
+            <div class="divider"></div>
+            <h2>이미 <span class="hl">당신 곁</span>에 있는 AI</h2>
+        </div>
+
+        <div class="center-section">
+            <div class="use-case uc-1">
+                <div class="uc-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#0ff4f4" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="uc-text">음성 비서</div>
+                    <div class="uc-sub">시리, 빅스비, 알렉사</div>
+                </div>
+            </div>
+
+            <div class="use-case uc-2">
+                <div class="uc-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#0ff4f4" stroke-width="2" stroke-linecap="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <path d="M8 21h8M12 17v4"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="uc-text">넷플릭스 추천</div>
+                    <div class="uc-sub">취향 분석 알고리즘</div>
+                </div>
+            </div>
+
+            <div class="illustration-center">
+                <img src="./images/card4_illust.png" alt="Robot with daily items">
+            </div>
+
+            <div class="use-case uc-3">
+                <div class="uc-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#0ff4f4" stroke-width="2" stroke-linecap="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="uc-text">스팸 필터</div>
+                    <div class="uc-sub">이메일 자동 분류</div>
+                </div>
+            </div>
+
+            <div class="use-case uc-4">
+                <div class="uc-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#0ff4f4" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="uc-text">네비게이션</div>
+                    <div class="uc-sub">실시간 교통 예측</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-bar">
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                <circle cx="18" cy="18" r="16" stroke="#0ff4f4" stroke-width="2" fill="rgba(15,244,244,0.1)"/>
+                <path d="M13 18l3 3 7-7" stroke="#0ff4f4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="sum-text">
+                우리가 매일 쓰는 서비스 대부분에 <span class="hl">AI가 숨어있다</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="deco-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+    </div>
+    <div class="corner-mark bl"></div>
+    <div class="corner-mark br"></div>
+</div>
+</body>
+</html>

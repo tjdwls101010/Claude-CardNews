@@ -119,9 +119,9 @@ rembg p ./images_raw/ ./images_nobg/
 1. Extract **3 core messages** from the user's topic/content
 2. Simplify jargon to middle-school comprehension level
 3. Plan the card series structure (number of cards, role of each):
-   - Card 1: Cover (topic + impactful visual)
-   - Cards 2 to N-1: Body cards (core content)
-   - Card N: Ending (quote or vision statement -- never "thank you")
+   - Card 1: Cover (topic + impactful visual -- full-bleed, bold, attention-grabbing)
+   - Cards 2 to N-1: Body cards (core content -- vary layouts: LR split, TB, Z-pattern, grid)
+   - Card N: Ending (quote or vision statement -- never "thank you". Must be as visually dense as other cards, NOT a sparse page with text only. Include illustration + summary grid or key takeaways)
 4. Write titles as **conclusions, not topics** (Tesla Rule)
    - Bad: "The Effects of Temperature and Humidity"
    - Good: "Maintaining 25C and 60% Humidity Is Essential for Livestock Growth"
@@ -179,11 +179,21 @@ Refer to `references/image-prompt-guide.md` for prompt writing. All prompts must
    ```bash
    python scripts/generate_image.py --prompt "Change the background to navy blue" --input card1_v1.png --output card1_final.png
    ```
-5. The finalized image becomes the **style reference** for the series
+5. The finalized image becomes the **style reference** for the entire series
 
-#### Step 3-2: Remaining Card Illustrations (Maintain Style Consistency)
+#### Step 3-2: Remaining Card Illustrations (Character & Style Consistency is CRITICAL)
 
-Provide previous card's finalized image as a **reference**. Generate remaining illustrations in **batch mode (parallel)**:
+**The #1 visual quality issue is inconsistent illustration style across cards.** All cards in a series MUST feel like they belong together. This means:
+- The **same character/mascot** should appear across multiple cards (not a different character on every card)
+- The **same rendering style** (same 3D clay texture, same color temperature, same level of detail)
+- The **same color palette** in illustrations matching the card's CSS color scheme
+
+To achieve this, ALWAYS provide the first card's finalized illustration as `--refs` for every subsequent image generation. Include explicit instructions in the prompt:
+- "Same character as in the reference image"
+- "Identical 3D clay rendering style, same color temperature and texture"
+- "Same visual universe as the reference"
+
+Generate remaining illustrations in **batch mode (parallel)**:
 ```bash
 python scripts/generate_image.py --batch remaining_cards.json
 ```
@@ -272,21 +282,25 @@ Key principles:
 
 4. **Generate ALL cards** as HTML first (applying the sizing guidelines above)
 
-5. **Visual Review Loop (critical for quality):**
+5. **Visual Review Loop (critical for quality -- do NOT skip this):**
    a. Convert all HTML to PNG:
       ```bash
       python <skill_dir>/scripts/html_to_png.py ./outputs/
       ```
    b. **Read every PNG** to visually evaluate the actual rendered result
-   c. Check across all cards for consistent issues:
-      - Are elements too small? Are titles bold enough?
-      - Is there excessive whitespace? Does the canvas feel full?
-      - Are illustrations prominent or thumbnail-sized?
-      - Is padding too generous?
-      - Are font sizes consistent across the series?
-   d. If sizing/density issues are found, **adjust CSS values across ALL HTML files at once** for consistency (don't fix one card at a time -- apply uniform changes)
-   e. Re-convert to PNG and Read again to verify
-   f. Repeat until the visual density and sizing feel right
+   c. Check across all cards for these specific issues:
+      - **Density**: Do elements fill 75-85% of canvas? Any card that feels sparse or has large empty areas MUST be fixed
+      - **Sizing**: Are titles 64px+? Are illustrations 500px+ wide? Is padding under 60px?
+      - **Consistency**: Are font sizes, padding, and spacing uniform across ALL cards?
+      - **Illustration style**: Do all illustrations look like they belong to the same series? Same character, same rendering style?
+      - **Ending card**: Is it as visually rich as body cards? (Ending cards often end up too sparse)
+      - **Text readability**: Can all text be read clearly against its background?
+   d. If ANY issues are found:
+      - Identify the specific CSS values causing the problem
+      - **Apply fixes across ALL HTML files at once** (not one card at a time)
+      - Re-convert to PNG
+      - Read again to verify the fix worked
+   e. Repeat until all cards pass visual inspection
 
 6. -> **AskUserQuestion**: Show the final PNGs and collect feedback (adjustments, satisfaction)
 7. Apply user feedback if any, re-convert, and finalize

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 작동 원리 - 02 데이터</title>
+<style>
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-1Thin.ttf') format('truetype'); font-weight: 100; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-2ExtraLight.ttf') format('truetype'); font-weight: 200; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-3Light.ttf') format('truetype'); font-weight: 300; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-4Regular.ttf') format('truetype'); font-weight: 400; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-5Medium.ttf') format('truetype'); font-weight: 500; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-6SemiBold.ttf') format('truetype'); font-weight: 600; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-7Bold.ttf') format('truetype'); font-weight: 700; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-8ExtraBold.ttf') format('truetype'); font-weight: 800; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-9Black.ttf') format('truetype'); font-weight: 900; }
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f0f0; font-family: 'Paperlogy', sans-serif; }
+
+:root {
+    --bg: #0B1120;
+    --primary: #0ff4f4;
+    --accent: #00D4AA;
+    --neutral: #1A2340;
+    --text: #FFFFFF;
+    --dim: #6B7A99;
+    --pad: 50px;
+}
+
+.card {
+    position: relative;
+    width: 1080px;
+    height: 1350px;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    word-break: keep-all;
+}
+
+.bg-gradient {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background:
+        radial-gradient(ellipse at 30% 60%, rgba(0, 212, 170, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 20%, rgba(15, 244, 244, 0.06) 0%, transparent 40%),
+        linear-gradient(180deg, #0D1A2F 0%, #0B1120 100%);
+    z-index: 0;
+}
+
+.watermark {
+    position: absolute;
+    top: 42%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Paperlogy', sans-serif;
+    font-weight: 900;
+    font-size: 200px;
+    color: rgba(255, 255, 255, 0.025);
+    white-space: nowrap;
+    z-index: 0;
+    pointer-events: none;
+    user-select: none;
+    letter-spacing: -0.03em;
+}
+
+.progress-bar {
+    position: absolute;
+    top: 0; left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    z-index: 10;
+    width: 40%;
+}
+
+.anchor-tl {
+    position: absolute;
+    top: 36px; left: var(--pad);
+    font-weight: 600;
+    font-size: 18px;
+    color: rgba(255,255,255,0.5);
+    z-index: 10;
+    letter-spacing: 0.05em;
+}
+.anchor-tr {
+    position: absolute;
+    top: 36px; right: var(--pad);
+    font-weight: 300;
+    font-size: 18px;
+    color: rgba(255,255,255,0.4);
+    z-index: 10;
+}
+
+.content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 90px var(--pad) var(--pad) var(--pad);
+}
+
+/* Card number */
+.card-num {
+    font-weight: 900;
+    font-size: 120px;
+    color: rgba(15, 244, 244, 0.08);
+    position: absolute;
+    top: 70px;
+    right: var(--pad);
+    z-index: 1;
+    line-height: 1;
+    letter-spacing: -0.05em;
+}
+
+/* Title section */
+.section-title {
+    margin-top: 16px;
+    margin-bottom: 8px;
+}
+.section-title .divider {
+    width: 50px;
+    height: 3px;
+    background: var(--primary);
+    margin-bottom: 20px;
+}
+.section-title h2 {
+    font-weight: 800;
+    font-size: 52px;
+    line-height: 1.2;
+    letter-spacing: -0.04em;
+    color: #FFFFFF;
+}
+.section-title h2 .hl {
+    color: var(--primary);
+}
+
+/* Illustration */
+.illustration-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+    flex-shrink: 0;
+}
+.illustration-wrap img {
+    width: 420px;
+    height: 420px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 30px rgba(15, 244, 244, 0.2)) drop-shadow(0 0 60px rgba(0,212,170,0.1));
+}
+
+/* Explanation cards */
+.explain-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    flex: 1;
+}
+.explain-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+}
+.explain-item .icon-label {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--primary);
+    margin-bottom: 10px;
+    letter-spacing: 0.03em;
+}
+.explain-item .explain-title {
+    font-weight: 700;
+    font-size: 24px;
+    color: #FFFFFF;
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+.explain-item .explain-desc {
+    font-weight: 400;
+    font-size: 20px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.5;
+}
+
+/* Bottom dots */
+.deco-dots {
+    position: absolute;
+    bottom: 36px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+}
+.deco-dots .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+}
+.deco-dots .dot.active {
+    width: 28px;
+    border-radius: 4px;
+    background: var(--primary);
+}
+
+.corner-mark {
+    position: absolute;
+    width: 24px; height: 24px;
+    z-index: 10;
+}
+.corner-mark.bl { bottom: 36px; left: var(--pad); border-left: 2px solid rgba(255,255,255,0.1); border-bottom: 2px solid rgba(255,255,255,0.1); }
+.corner-mark.br { bottom: 36px; right: var(--pad); border-right: 2px solid rgba(255,255,255,0.1); border-bottom: 2px solid rgba(255,255,255,0.1); }
+</style>
+</head>
+<body>
+<div class="card">
+    <div class="bg-gradient"></div>
+    <div class="watermark">DATA</div>
+    <div class="progress-bar"></div>
+    <div class="card-num">02</div>
+
+    <div class="anchor-tl">AI EXPLAINED</div>
+    <div class="anchor-tr"><span style="font-weight:600;color:rgba(255,255,255,0.7);">02</span> <span style="color:rgba(255,255,255,0.3);">/ 05</span></div>
+
+    <div class="content">
+        <div class="section-title">
+            <div class="divider"></div>
+            <h2>AI의 비밀은<br><span class="hl">데이터</span>에 있다</h2>
+        </div>
+
+        <div class="illustration-wrap">
+            <img src="./images/card2_illust.png" alt="Robot with data">
+        </div>
+
+        <div class="explain-grid">
+            <div class="explain-item">
+                <div class="icon-label">STEP 01</div>
+                <div class="explain-title">데이터 수집</div>
+                <div class="explain-desc">사진, 글, 숫자 등 세상의 정보를 모은다</div>
+            </div>
+            <div class="explain-item">
+                <div class="icon-label">STEP 02</div>
+                <div class="explain-title">패턴 발견</div>
+                <div class="explain-desc">비슷한 것끼리 묶고 규칙을 찾아낸다</div>
+            </div>
+            <div class="explain-item">
+                <div class="icon-label">STEP 03</div>
+                <div class="explain-title">규칙 저장</div>
+                <div class="explain-desc">찾아낸 규칙을 기억 장치에 저장한다</div>
+            </div>
+            <div class="explain-item">
+                <div class="icon-label">STEP 04</div>
+                <div class="explain-title">새로운 판단</div>
+                <div class="explain-desc">저장된 규칙으로 처음 보는 것도 맞힌다</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="deco-dots">
+        <div class="dot"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+    <div class="corner-mark bl"></div>
+    <div class="corner-mark br"></div>
+</div>
+</body>
+</html>
