@@ -1,2 +1,4 @@
-References/
+/References/
 .DS_Store
+.env
+.env.*
