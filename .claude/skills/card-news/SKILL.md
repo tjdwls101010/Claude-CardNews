@@ -96,6 +96,59 @@ python <skill_dir>/scripts/html_to_png.py ./outputs/card_01.html --output ./fina
 
 Output: PNG at 1080x1350px viewport, 2x device scale (actual 2160x2700px retina resolution).
 
+### process_photo.py -- Photo Processing (Pillow-based)
+
+For mechanical, precise photo operations. Use this for crop, resize, composite, grayscale.
+For creative edits (color grading, style change), use generate_image.py --input instead.
+
+**Crop to aspect ratio:**
+```bash
+python <skill_dir>/scripts/process_photo.py --crop 4:5 --input photo.jpg --output cropped.png
+```
+
+**Resize to exact dimensions:**
+```bash
+python <skill_dir>/scripts/process_photo.py --resize 1080x1350 --input photo.jpg --output resized.png
+```
+
+**Grayscale conversion:**
+```bash
+python <skill_dir>/scripts/process_photo.py --grayscale --input photo.jpg --output bw.png
+```
+
+**Brightness/contrast/saturation adjustment:**
+```bash
+python <skill_dir>/scripts/process_photo.py --brightness 0.7 --contrast 1.3 --input photo.jpg --output adjusted.png
+```
+
+**Composite (multi-photo collage):**
+```bash
+# First write a layout JSON:
+cat > layout.json << 'EOF'
+{
+  "canvas": {"width": 1080, "height": 1350, "bg": "#000000"},
+  "layers": [
+    {"image": "bg_photo.png", "x": 0, "y": 0, "width": 1080, "opacity": 0.7},
+    {"image": "person_cutout.png", "x": 200, "y": 100, "width": 600},
+    {"image": "small_photo.png", "x": 700, "y": 800, "width": 300, "grayscale": true}
+  ]
+}
+EOF
+python <skill_dir>/scripts/process_photo.py --composite layout.json --output collage.png
+```
+
+**Batch (parallel processing):**
+```bash
+cat > batch.json << 'EOF'
+[
+  {"action": "crop", "input": "a.jpg", "output": "a_crop.png", "ratio": "4:5"},
+  {"action": "grayscale", "input": "b.jpg", "output": "b_bw.png"},
+  {"action": "resize", "input": "c.jpg", "output": "c_resized.png", "dimensions": "1080x1350"}
+]
+EOF
+python <skill_dir>/scripts/process_photo.py --batch batch.json
+```
+
 ### rembg -- Background Removal
 
 **Single file:**
@@ -150,7 +203,31 @@ rembg p ./images_raw/ ./images_nobg/
 
 -> **AskUserQuestion**: Present color palette and design tone options (e.g., "dark + cyan" vs "bright + pastel" vs "minimal monotone")
 
-### Phase 3: Illustration Generation (Nano Banana)
+### Phase 3: Visual Assets
+
+**Two paths depending on whether the user provides photos:**
+
+#### Path A: User provides photos -> Photo Processing
+
+Refer to `references/photo-processing-guide.md` for detailed techniques.
+
+1. **Read** user-provided photo(s) to assess quality and composition
+2. **Crop/resize** to card dimensions:
+   ```bash
+   python <skill_dir>/scripts/process_photo.py --crop 4:5 --input photo.jpg --output cropped.png
+   ```
+3. **Decide on treatment** for each photo:
+   - Need person cutout? -> `rembg i photo.png cutout.png`
+   - Need grayscale? -> `process_photo.py --grayscale` or CSS `filter: grayscale(1)`
+   - Need color/mood change? -> `generate_image.py --input photo.png --prompt "Apply a cool blue cinematic tone, keep composition identical"`
+   - Need multi-photo collage? -> `process_photo.py --composite layout.json`
+4. Integrate processed photos into HTML:
+   - As full-bleed background: `background-image: url('./images/photo.png'); background-size: cover;`
+   - As positioned element: `<img src="./images/cutout.png" style="position:absolute; ...">`
+   - Apply CSS gradient overlay, glassmorphism, etc. for text readability
+5. -> **AskUserQuestion**: Show processed photos and ask if the treatment is right
+
+#### Path B: No user photos -> Generate illustrations with Nano Banana
 
 Refer to `references/image-prompt-guide.md` for prompt writing. All prompts must be in English, narrative form.
 
@@ -246,33 +323,37 @@ Refer to `references/css-patterns.md` for base templates and patterns.
 2. Illustrations saved as **separate image files**, referenced via path in HTML (`<img src="./images/card1_illust.png">`)
 3. Decorative elements via inline SVG + CSS
 
-**CRITICAL: Sizing & Density Guidelines (cards must feel "full", not sparse)**
+**CRITICAL: Sizing & Density Guidelines**
 
-The 1080x1350px canvas must be used efficiently. Overly small elements and excessive whitespace make cards look amateurish. Follow these concrete sizing rules:
+Too much whitespace is the single most common quality issue. Professional card news feels DENSE and FULL -- not airy and sparse. When in doubt, tighten spacing, enlarge elements, and fill gaps.
 
-| Element | Minimum Size | Notes |
-|---------|-------------|-------|
-| Main title | 64-80px font-size | Can go up to 96px for single-word impact |
-| Subtitle | 28-36px | |
-| Body text | 22-28px | |
+| Element | Size | Notes |
+|---------|------|-------|
+| Main title | 72-96px | Go large. Single-word titles can be 120px+ |
+| Subtitle | 30-40px | |
+| Body text | 24-30px | |
 | Caption/meta | 14-18px | |
-| Card padding | 48-60px | Never exceed 70px. Less padding = more content space |
-| Illustration | 500-700px wide | Should occupy 45-65% of card width |
-| Element gap | 20-32px | Never exceed 40px between adjacent elements |
+| Card padding | 36-48px | **Never exceed 50px.** Less padding = more content space |
+| Illustration/Photo | 600-900px wide | Should dominate the card. 55-80% of card width |
+| Element gap | 12-24px | **Never exceed 28px.** Tighter is almost always better |
+| Section dividers | 2-4px lines | Thin, not thick |
 
 Key principles:
-- **Fill the canvas**: Elements should collectively occupy 75-85% of the card area
-- **No dead space**: If empty space exists, fill it with decorative elements, watermark text, or expand existing elements
-- **Bold typography**: Titles should feel imposing. When in doubt, go bigger
-- **Illustrations should be prominent**: They are the visual anchor, not a small thumbnail
-- **Edge-to-edge when appropriate**: Some elements (images, gradient bars, dividers) can span the full width without padding
-- **Overlap for dynamism**: Allow illustrations to overlap text areas or break grid boundaries (z-index layering)
+- **85-95% canvas fill**: Elements should cover almost the entire card. The reference promotional materials the user showed had nearly zero wasted space
+- **Tight, tight, tight**: Default CSS spacing is almost always too generous. Actively reduce padding, margin, and gap values
+- **Photos should FILL the frame**: Background photos should cover the full card with no visible card background color peeking through
+- **Bold typography**: Titles should be imposing and large. When in doubt, go bigger
+- **Edge-to-edge**: Photos, gradient bars, and decorative elements should span full width (no side padding)
+- **Overlap for dynamism**: Allow illustrations to overlap text areas or break grid boundaries
+- **No empty spacer divs**: Every pixel should serve a purpose. If space exists, either expand adjacent elements or add content
+- **Test by squinting**: When you Read the PNG, squint at it. If you see large uniform-color areas with no content, those are dead zones that need fixing
 
 **Design Quality Checklist (verify for every card):**
-- [ ] **Canvas density**: Elements fill 75-85% of card area (no sparse, empty feeling)
-- [ ] **Title is bold enough**: Main title is 64px+ and feels imposing
-- [ ] **Illustration is prominent**: 500px+ wide, visually dominant
-- [ ] **Padding is tight**: Card padding is 48-60px, not more
+- [ ] **Canvas density**: Elements fill 85-95% of card area. Squint test: no large empty zones
+- [ ] **Title is bold enough**: Main title is 72px+ and dominates the card
+- [ ] **Illustration/Photo is prominent**: 600px+ wide, visually dominant, fills frame
+- [ ] **Padding is tight**: Card padding is 36-48px, never more than 50px
+- [ ] **Gaps are minimal**: Element spacing is 12-24px, never more than 28px
 - [ ] Image background integrates naturally (no white residue after rembg)
 - [ ] Gradient mask or glassmorphism ensures text readability
 - [ ] Gray dimming applied to all non-essential text
@@ -399,3 +480,4 @@ For deeper techniques and code examples, consult:
 - `references/design-principles.md` -- Comprehensive Paperology design principles (most important reference)
 - `references/css-patterns.md` -- Ready-to-use CSS code snippets
 - `references/image-prompt-guide.md` -- Nano Banana image prompt writing guide
+- `references/photo-processing-guide.md` -- Photo processing with Pillow, Nano Banana edit mode, and CSS filters
