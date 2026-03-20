@@ -1,0 +1,27 @@
+[
+  {
+    "prompt": "A 3D clay-style illustration of a friendly humanoid robot head with glowing cyan eyes, smooth rounded features, and a warm approachable expression. The robot has a translucent brain-like dome on top showing tiny glowing neural pathways inside. Rendered with soft matte tactile texture, gentle ambient occlusion shadows, and playful oversized proportions. The background must be pure white with no shadows or textures. No text.",
+    "output": "/Users/seongjin/Documents/Seongjin_Claude/Design/card-news-workspace/iteration-3/eval-1-with_skill/outputs/images_raw/card1_robot.png",
+    "aspect_ratio": "4:5"
+  },
+  {
+    "prompt": "A 3D clay-style illustration of a large funnel collecting colorful scattered items at the top (photos, text documents, music notes, numbers) and outputting a single clean organized cube at the bottom. The funnel is translucent with tiny gears and circuits visible inside. Rendered with soft rounded edges, matte tactile texture, and gentle ambient occlusion. Playful chibi-like proportions. The background must be pure white. No text.",
+    "output": "/Users/seongjin/Documents/Seongjin_Claude/Design/card-news-workspace/iteration-3/eval-1-with_skill/outputs/images_raw/card2_funnel.png",
+    "aspect_ratio": "1:1"
+  },
+  {
+    "prompt": "A 3D clay-style illustration of an open book with tiny glowing words and sentences floating out of its pages. Above the book, a friendly robot arm is picking up individual words with tweezers and arranging them on a floating chalkboard. The scene shows the concept of pattern learning. Soft matte texture, rounded edges, warm lighting, playful proportions. Pure white background. No text.",
+    "output": "/Users/seongjin/Documents/Seongjin_Claude/Design/card-news-workspace/iteration-3/eval-1-with_skill/outputs/images_raw/card3_learning.png",
+    "aspect_ratio": "1:1"
+  },
+  {
+    "prompt": "A 3D clay-style illustration showing a split scene: on the left side, a person speaking into a microphone with colorful sound waves, and on the right side, the same sound waves transforming into a written response on a floating tablet screen. A small friendly robot sits between them acting as a translator. Soft matte texture, rounded edges, gentle ambient lighting. Pure white background. No text.",
+    "output": "/Users/seongjin/Documents/Seongjin_Claude/Design/card-news-workspace/iteration-3/eval-1-with_skill/outputs/images_raw/card4_conversation.png",
+    "aspect_ratio": "1:1"
+  },
+  {
+    "prompt": "A 3D clay-style illustration of a glowing crystal ball sitting on a futuristic pedestal, with a small friendly robot and a human figure standing together looking at the crystal ball with wonder. Inside the crystal ball, tiny floating icons represent healthcare, art, science, and education. Warm hopeful lighting, soft matte texture, rounded edges, playful proportions. Pure white background. No text.",
+    "output": "/Users/seongjin/Documents/Seongjin_Claude/Design/card-news-workspace/iteration-3/eval-1-with_skill/outputs/images_raw/card5_future.png",
+    "aspect_ratio": "1:1"
+  }
+]
