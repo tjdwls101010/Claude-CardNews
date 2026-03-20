@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 작동 원리 - 응답 생성</title>
+<style>
+
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-1Thin.ttf') format('truetype'); font-weight: 100; font-style: normal; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-2ExtraLight.ttf') format('truetype'); font-weight: 200; font-style: normal; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-3Light.ttf') format('truetype'); font-weight: 300; font-style: normal; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-4Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-5Medium.ttf') format('truetype'); font-weight: 500; font-style: normal; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-6SemiBold.ttf') format('truetype'); font-weight: 600; font-style: normal; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-7Bold.ttf') format('truetype'); font-weight: 700; font-style: normal; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-8ExtraBold.ttf') format('truetype'); font-weight: 800; font-style: normal; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-9Black.ttf') format('truetype'); font-weight: 900; font-style: normal; }
+
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #f0f0f0;
+    font-family: 'Paperlogy', sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+}
+
+:root {
+    --primary: #00E5FF;
+    --accent: #00BCD4;
+    --bg: #0A0A12;
+    --surface: #12121E;
+    --text: #FFFFFF;
+    --text-dim: #888888;
+    --text-muted: #555555;
+}
+
+.card {
+    position: relative;
+    width: 1080px;
+    height: 1350px;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    word-break: keep-all;
+    line-height: 1.5;
+}
+
+/* Background watermark */
+.bg-watermark {
+    position: absolute;
+    top: 15%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Paperlogy', sans-serif;
+    font-weight: 900;
+    font-size: 200px;
+    color: rgba(255, 255, 255, 0.025);
+    white-space: nowrap;
+    z-index: 0;
+    pointer-events: none;
+    user-select: none;
+    letter-spacing: -0.03em;
+}
+
+/* Mesh gradient */
+.mesh-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image:
+        radial-gradient(ellipse at 40% 60%, rgba(0, 229, 255, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 30%, rgba(0, 188, 212, 0.05) 0%, transparent 50%);
+}
+
+/* Progress bar */
+.progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    z-index: 20;
+}
+
+/* Corner anchors */
+.anchor-tl {
+    position: absolute;
+    top: 40px;
+    left: 48px;
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--text-dim);
+    z-index: 10;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+}
+
+.anchor-tr {
+    position: absolute;
+    top: 40px;
+    right: 48px;
+    font-weight: 300;
+    font-size: 16px;
+    color: var(--text-dim);
+    z-index: 10;
+}
+
+.anchor-bl {
+    position: absolute;
+    bottom: 40px;
+    left: 48px;
+    font-weight: 300;
+    font-size: 14px;
+    color: var(--text-muted);
+    z-index: 10;
+}
+
+.anchor-br {
+    position: absolute;
+    bottom: 40px;
+    right: 48px;
+    font-weight: 200;
+    font-size: 22px;
+    color: var(--text-muted);
+    z-index: 10;
+}
+
+/* Main layout: TB */
+.content-wrapper {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 100px 72px 100px;
+}
+
+/* Step badge */
+.step-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(0, 229, 255, 0.12);
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    font-weight: 800;
+    font-size: 20px;
+    color: var(--primary);
+}
+
+.step-label {
+    font-weight: 500;
+    font-size: 18px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.section-title {
+    font-weight: 800;
+    font-size: 48px;
+    line-height: 1.25;
+    letter-spacing: -0.04em;
+    color: var(--text);
+    margin-bottom: 12px;
+}
+
+.section-title .highlight {
+    color: var(--primary);
+}
+
+.section-desc {
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+}
+
+/* Center illustration */
+.illust-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.illustration {
+    width: 380px;
+    height: 380px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 30px rgba(255,255,255,0.2));
+}
+
+.illust-glow {
+    position: absolute;
+    width: 440px;
+    height: 440px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 229, 255, 0.06) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+}
+
+/* Flow diagram */
+.flow-section {
+    margin-top: auto;
+}
+
+.flow-diagram {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+}
+
+.flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+}
+
+.flow-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 800;
+}
+
+.flow-icon.input {
+    background: rgba(0, 229, 255, 0.1);
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    color: var(--primary);
+}
+
+.flow-icon.process {
+    background: rgba(0, 229, 255, 0.15);
+    border: 1px solid rgba(0, 229, 255, 0.3);
+    color: var(--primary);
+}
+
+.flow-icon.output {
+    background: rgba(0, 229, 255, 0.2);
+    border: 1px solid rgba(0, 229, 255, 0.4);
+    color: var(--primary);
+}
+
+.flow-label {
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--text);
+}
+
+.flow-desc {
+    font-weight: 400;
+    font-size: 16px;
+    color: var(--text-dim);
+    max-width: 160px;
+}
+
+.flow-arrow {
+    font-size: 28px;
+    color: rgba(0, 229, 255, 0.3);
+    margin: 0 20px;
+    margin-bottom: 40px;
+}
+
+/* Glass footer note */
+.footer-note {
+    margin-top: 32px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 20px 28px;
+    font-weight: 400;
+    font-size: 19px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    text-align: center;
+}
+
+.footer-note .em {
+    color: var(--text);
+    font-weight: 700;
+}
+
+/* Decorative circle */
+.deco-circle {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 229, 255, 0.06);
+    z-index: 1;
+    pointer-events: none;
+}
+
+</style>
+</head>
+<body>
+<div class="card">
+    <!-- Background -->
+    <div class="mesh-bg"></div>
+    <div class="bg-watermark">OUTPUT</div>
+
+    <!-- Progress bar (4/5 = 80%) -->
+    <div class="progress-bar" style="width: 80%;"></div>
+
+    <!-- Corner anchors -->
+    <div class="anchor-tl">AI Guide</div>
+    <div class="anchor-tr"><span style="font-weight:600; color: var(--text);">04</span><span style="color: var(--text-dim);"> / 05</span></div>
+    <div class="anchor-bl">STEP 3 OF 3</div>
+    <div class="anchor-br">+</div>
+
+    <!-- Decorative -->
+    <div class="deco-circle" style="width: 240px; height: 240px; top: -60px; left: -40px;"></div>
+
+    <!-- Main content -->
+    <div class="content-wrapper">
+        <div class="step-badge">
+            <span class="step-number">3</span>
+            <span class="step-label">Response</span>
+        </div>
+        <h2 class="section-title">
+            질문하면 <span class="highlight">가장 그럴듯한 답</span>을 골라냅니다
+        </h2>
+        <p class="section-desc">
+            AI는 "정답"을 아는 게 아니라, 배운 것 중에서 확률이 가장 높은 답을 내놓습니다
+        </p>
+
+        <!-- Center illustration -->
+        <div class="illust-area">
+            <div class="illust-glow"></div>
+            <img class="illustration" src="./images/card4_nobg.png" alt="AI conversation">
+        </div>
+
+        <!-- Flow diagram -->
+        <div class="flow-section">
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="flow-icon input">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    </div>
+                    <span class="flow-label">질문 입력</span>
+                    <span class="flow-desc">"오늘 날씨 어때?"</span>
+                </div>
+                <span class="flow-arrow">&#10132;</span>
+                <div class="flow-step">
+                    <div class="flow-icon process">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    </div>
+                    <span class="flow-label">패턴 검색</span>
+                    <span class="flow-desc">배운 내용에서 관련 정보를 찾음</span>
+                </div>
+                <span class="flow-arrow">&#10132;</span>
+                <div class="flow-step">
+                    <div class="flow-icon output">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                    <span class="flow-label">답변 생성</span>
+                    <span class="flow-desc">확률이 높은 답을 조합하여 응답</span>
+                </div>
+            </div>
+
+            <div class="footer-note">
+                마치 시험 문제를 풀 때 <span class="em">"이게 맞을 확률이 제일 높겠다"</span>고 고르는 것과 비슷해요
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

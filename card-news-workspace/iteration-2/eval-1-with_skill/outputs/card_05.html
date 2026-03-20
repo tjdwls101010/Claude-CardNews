@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 작동 원리 - 엔딩</title>
+<style>
+
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-1Thin.ttf') format('truetype'); font-weight: 100; font-style: normal; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-2ExtraLight.ttf') format('truetype'); font-weight: 200; font-style: normal; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-3Light.ttf') format('truetype'); font-weight: 300; font-style: normal; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-4Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-5Medium.ttf') format('truetype'); font-weight: 500; font-style: normal; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-6SemiBold.ttf') format('truetype'); font-weight: 600; font-style: normal; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-7Bold.ttf') format('truetype'); font-weight: 700; font-style: normal; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-8ExtraBold.ttf') format('truetype'); font-weight: 800; font-style: normal; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-9Black.ttf') format('truetype'); font-weight: 900; font-style: normal; }
+
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #f0f0f0;
+    font-family: 'Paperlogy', sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+}
+
+:root {
+    --primary: #00E5FF;
+    --accent: #00BCD4;
+    --bg: #0A0A12;
+    --surface: #12121E;
+    --text: #FFFFFF;
+    --text-dim: #888888;
+    --text-muted: #555555;
+}
+
+.card {
+    position: relative;
+    width: 1080px;
+    height: 1350px;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    word-break: keep-all;
+    line-height: 1.5;
+}
+
+/* Mesh gradient - bookend with card 1 */
+.mesh-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image:
+        radial-gradient(ellipse at 50% 60%, rgba(0, 229, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 20% 80%, rgba(0, 188, 212, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(0, 229, 255, 0.05) 0%, transparent 50%);
+}
+
+/* Background watermark */
+.bg-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-12deg);
+    font-family: 'Paperlogy', sans-serif;
+    font-weight: 900;
+    font-size: 180px;
+    color: rgba(255, 255, 255, 0.025);
+    white-space: nowrap;
+    z-index: 0;
+    pointer-events: none;
+    user-select: none;
+    letter-spacing: -0.03em;
+}
+
+/* Progress bar (full) */
+.progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    z-index: 20;
+}
+
+/* Corner anchors */
+.anchor-tl {
+    position: absolute;
+    top: 40px;
+    left: 48px;
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--text-dim);
+    z-index: 10;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+}
+
+.anchor-tr {
+    position: absolute;
+    top: 40px;
+    right: 48px;
+    font-weight: 300;
+    font-size: 16px;
+    color: var(--text-dim);
+    z-index: 10;
+}
+
+.anchor-bl {
+    position: absolute;
+    bottom: 40px;
+    left: 48px;
+    font-weight: 300;
+    font-size: 14px;
+    color: var(--text-muted);
+    z-index: 10;
+}
+
+.anchor-br {
+    position: absolute;
+    bottom: 40px;
+    right: 48px;
+    font-weight: 200;
+    font-size: 22px;
+    color: var(--text-muted);
+    z-index: 10;
+}
+
+/* Main content - cinematic ending */
+.content-wrapper {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 72px;
+    text-align: center;
+}
+
+/* Illustration */
+.illustration {
+    width: 360px;
+    height: 360px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 30px rgba(255,255,255,0.2));
+    margin-bottom: 56px;
+}
+
+.illust-glow {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 229, 255, 0.08) 0%, transparent 70%);
+    top: 28%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+}
+
+/* Summary section */
+.summary-title {
+    font-weight: 800;
+    font-size: 44px;
+    line-height: 1.3;
+    letter-spacing: -0.04em;
+    color: var(--text);
+    margin-bottom: 36px;
+}
+
+.summary-title .highlight {
+    color: var(--primary);
+}
+
+/* 3-point summary */
+.summary-grid {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 56px;
+    width: 100%;
+    max-width: 900px;
+}
+
+.summary-item {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 16px;
+    padding: 28px 20px;
+    text-align: center;
+}
+
+.summary-item .item-number {
+    font-weight: 900;
+    font-size: 36px;
+    color: var(--primary);
+    letter-spacing: -0.05em;
+    line-height: 1;
+    margin-bottom: 12px;
+}
+
+.summary-item .item-title {
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.summary-item .item-desc {
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--text-dim);
+}
+
+/* Divider line */
+.divider {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: 2px;
+    margin-bottom: 36px;
+}
+
+/* Cinematic ending quote */
+.ending-quote {
+    font-weight: 300;
+    font-size: 28px;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 700px;
+}
+
+.ending-quote .em {
+    font-weight: 700;
+    color: var(--text);
+}
+
+/* Brand */
+.brand {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: 300;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.25);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    z-index: 10;
+}
+
+/* Decorative elements */
+.deco-line {
+    position: absolute;
+    width: 1px;
+    height: 100px;
+    background: linear-gradient(to bottom, transparent, rgba(0, 229, 255, 0.15), transparent);
+    z-index: 1;
+}
+
+.deco-circle {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 229, 255, 0.06);
+    z-index: 1;
+    pointer-events: none;
+}
+
+</style>
+</head>
+<body>
+<div class="card">
+    <!-- Background -->
+    <div class="mesh-bg"></div>
+    <div class="bg-watermark">FUTURE</div>
+    <div class="illust-glow"></div>
+
+    <!-- Progress bar (full) -->
+    <div class="progress-bar" style="width: 100%;"></div>
+
+    <!-- Corner anchors -->
+    <div class="anchor-tl">AI Guide</div>
+    <div class="anchor-tr"><span style="font-weight:600; color: var(--text);">05</span><span style="color: var(--text-dim);"> / 05</span></div>
+
+    <!-- Decorative -->
+    <div class="deco-line" style="left: 100px; top: 80px;"></div>
+    <div class="deco-line" style="right: 120px; bottom: 60px;"></div>
+    <div class="deco-circle" style="width: 200px; height: 200px; bottom: -50px; right: -40px;"></div>
+    <div class="deco-circle" style="width: 280px; height: 280px; top: -80px; left: -60px;"></div>
+
+    <!-- Main content -->
+    <div class="content-wrapper">
+        <img class="illustration" src="./images/card5_nobg.png" alt="Human and AI together">
+
+        <h2 class="summary-title">
+            <span class="highlight">3줄 요약</span>으로 끝!
+        </h2>
+
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="item-number">1</div>
+                <div class="item-title">데이터를 먹고</div>
+                <div class="item-desc">글, 사진, 소리 등<br>수많은 정보를 흡수</div>
+            </div>
+            <div class="summary-item">
+                <div class="item-number">2</div>
+                <div class="item-title">패턴을 배우고</div>
+                <div class="item-desc">반복 연습으로<br>규칙을 스스로 발견</div>
+            </div>
+            <div class="summary-item">
+                <div class="item-number">3</div>
+                <div class="item-title">답을 만든다</div>
+                <div class="item-desc">확률이 높은 답을<br>조합해 응답 생성</div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <p class="ending-quote">
+            AI는 마법이 아닙니다.<br>
+            <span class="em">사람이 만든 데이터로, 사람처럼 배운 도구</span>입니다.<br>
+            이해하면, 더 잘 쓸 수 있습니다.
+        </p>
+    </div>
+
+    <div class="brand">AI Guide Series</div>
+</div>
+</body>
+</html>
