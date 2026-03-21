@@ -1,0 +1,9 @@
+{
+  "name": "card-news",
+  "description": "Generate visually polished, information-optimized card news images from any topic or content. Designs in HTML, converts to PNG, and generates custom illustrations via Nano Banana API.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Seongjin"
+  },
+  "keywords": ["card-news", "infographic", "design", "SNS", "Instagram"]
+}

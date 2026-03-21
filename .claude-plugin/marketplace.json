@@ -1,0 +1,16 @@
+{
+  "name": "seongjin-design",
+  "owner": {
+    "name": "Seongjin"
+  },
+  "metadata": {
+    "description": "Design tools for card news and visual content creation"
+  },
+  "plugins": [
+    {
+      "name": "card-news",
+      "source": "./",
+      "description": "Generate visually polished, information-optimized card news images from any topic or content"
+    }
+  ]
+}
