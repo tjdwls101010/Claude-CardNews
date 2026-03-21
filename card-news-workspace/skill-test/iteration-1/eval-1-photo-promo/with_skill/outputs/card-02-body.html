@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-1Thin.ttf') format('truetype'); font-weight: 100; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-2ExtraLight.ttf') format('truetype'); font-weight: 200; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-3Light.ttf') format('truetype'); font-weight: 300; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-4Regular.ttf') format('truetype'); font-weight: 400; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-5Medium.ttf') format('truetype'); font-weight: 500; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-6SemiBold.ttf') format('truetype'); font-weight: 600; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-7Bold.ttf') format('truetype'); font-weight: 700; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-8ExtraBold.ttf') format('truetype'); font-weight: 800; }
+@font-face { font-family: 'Paperlogy'; src: url('/Users/seongjin/Documents/Seongjin_Claude/Design/.claude/skills/card-news/assets/fonts/Paperlogy-9Black.ttf') format('truetype'); font-weight: 900; }
+
+:root {
+    --color-primary: #0A1628;
+    --color-accent: #E8B731;
+    --color-accent-light: #F5D76E;
+    --color-bg: #0A1628;
+    --color-surface: #132240;
+    --color-text: #FFFFFF;
+    --color-text-dim: #999999;
+    --color-text-muted: #555555;
+    --pad: 44px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #f0f0f0;
+    font-family: 'Paperlogy', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.card {
+    position: relative;
+    width: 1080px;
+    height: 1350px;
+    overflow: hidden;
+    word-break: keep-all;
+    background: var(--color-bg);
+}
+
+/* Corner anchors */
+.corner-tl {
+    position: absolute;
+    top: var(--pad);
+    left: var(--pad);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.corner-tl .party-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-accent);
+    letter-spacing: 0.02em;
+}
+.corner-tl .dot {
+    width: 8px;
+    height: 8px;
+    background: var(--color-accent);
+    border-radius: 50%;
+}
+
+.corner-tr {
+    position: absolute;
+    top: var(--pad);
+    right: var(--pad);
+    z-index: 10;
+    font-size: 24px;
+    font-weight: 200;
+    color: rgba(255,255,255,0.25);
+}
+
+.corner-bl {
+    position: absolute;
+    bottom: var(--pad);
+    left: var(--pad);
+    z-index: 10;
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--color-text-muted);
+    letter-spacing: 0.05em;
+}
+
+.corner-br {
+    position: absolute;
+    bottom: var(--pad);
+    right: var(--pad);
+    z-index: 10;
+}
+
+.page-number {
+    font-size: 18px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.3);
+}
+.page-number .current {
+    font-weight: 600;
+    color: rgba(255,255,255,0.6);
+}
+
+/* Watermark */
+.watermark {
+    position: absolute;
+    top: 200px;
+    right: -30px;
+    font-size: 180px;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.03);
+    letter-spacing: -0.05em;
+    z-index: 0;
+    pointer-events: none;
+    user-select: none;
+    line-height: 1;
+}
+
+/* Main content area */
+.content {
+    position: absolute;
+    top: 90px;
+    left: var(--pad);
+    right: var(--pad);
+    bottom: 80px;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Accent bar */
+.accent-bar {
+    width: 56px;
+    height: 5px;
+    background: var(--color-accent);
+    border-radius: 3px;
+    margin-bottom: 20px;
+}
+
+.section-label {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--color-accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+.title {
+    font-size: 52px;
+    font-weight: 800;
+    color: var(--color-text);
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+    margin-bottom: 28px;
+}
+.title .accent {
+    color: var(--color-accent);
+}
+
+/* Photo area */
+.photo-area {
+    width: 100%;
+    height: 420px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 28px;
+    position: relative;
+}
+
+.photo-area img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.75) contrast(1.2) saturate(0.7);
+}
+
+.photo-area .photo-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(to top,
+        rgba(10, 22, 40, 0.9) 0%,
+        rgba(10, 22, 40, 0.0) 100%
+    );
+}
+
+.photo-caption {
+    position: absolute;
+    bottom: 14px;
+    left: 20px;
+    font-size: 15px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.5);
+    z-index: 2;
+}
+
+/* Text content */
+.body-text {
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--color-text-dim);
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+    flex: 1;
+}
+
+.body-text strong {
+    color: var(--color-text);
+    font-weight: 700;
+}
+
+.body-text .highlight-line {
+    display: block;
+    margin-top: 24px;
+    padding: 18px 24px;
+    background: rgba(232, 183, 49, 0.08);
+    border-left: 4px solid var(--color-accent);
+    border-radius: 0 8px 8px 0;
+    font-size: 25px;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.5;
+}
+
+/* Reform points */
+.reform-points {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.reform-point {
+    flex: 1;
+    background: var(--color-surface);
+    border-radius: 10px;
+    padding: 22px 20px;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.reform-point .point-num {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--color-accent);
+    margin-bottom: 10px;
+}
+
+.reform-point .point-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+
+.reform-point .point-desc {
+    font-size: 17px;
+    font-weight: 400;
+    color: var(--color-text-dim);
+    line-height: 1.45;
+}
+</style>
+</head>
+<body>
+<div class="card">
+    <!-- Watermark -->
+    <div class="watermark">CHANGE</div>
+
+    <!-- Corner anchors -->
+    <div class="corner-tl">
+        <span class="dot"></span>
+        <span class="party-name">조국혁신당</span>
+    </div>
+    <div class="corner-tr">+</div>
+    <div class="corner-bl">정치개혁 시리즈</div>
+    <div class="corner-br">
+        <div class="page-number"><span class="current">02</span> / 03</div>
+    </div>
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="accent-bar"></div>
+        <div class="section-label">Why Reform</div>
+        <div class="title">공천만 받으면 당선되는<br><span class="accent">구조를 바꿔야</span> 합니다</div>
+
+        <!-- Photo -->
+        <div class="photo-area">
+            <img src="./images/body_photo.png" alt="">
+            <div class="photo-overlay"></div>
+            <span class="photo-caption">개혁진보 4당 의원총회 | 국회 로텐더홀</span>
+        </div>
+
+        <!-- Body text -->
+        <div class="body-text">
+            <strong>거대 양당 중심의 선거 구조</strong>가 우리 정치를 곪아가게 만들고 있습니다. "그 당에서는 개구리가 나와도 당선된다"는 자조가 현실이 된 지금, <strong>국민의 선택 앞에 긴장하고 경쟁하는 정치</strong>가 필요합니다.
+
+            <span class="highlight-line">중대선거구제 확대와 비례대표 확대로<br>비례성과 다양성을 강화해야 합니다</span>
+        </div>
+
+        <!-- Reform points -->
+        <div class="reform-points">
+            <div class="reform-point">
+                <div class="point-num">01</div>
+                <div class="point-title">중대선거구제<br>도입</div>
+                <div class="point-desc">소선거구의 양당 독점 구조를 타파</div>
+            </div>
+            <div class="reform-point">
+                <div class="point-num">02</div>
+                <div class="point-title">비례대표<br>정수 확대</div>
+                <div class="point-desc">국민 의사의 비례적 대표성 강화</div>
+            </div>
+            <div class="reform-point">
+                <div class="point-num">03</div>
+                <div class="point-title">결선투표제<br>도입</div>
+                <div class="point-desc">다수 국민이 지지하는 후보 당선</div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

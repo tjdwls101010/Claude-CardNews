@@ -5,479 +5,135 @@ description: Generate visually polished, information-optimized card news images 
 
 # Card News Generator
 
-Generate a series of 5-10 card news images from user-provided topics/content. Each card is designed as an individual HTML file, enriched with AI-generated illustrations, and converted to a final PNG image.
+Generate 5-10 card news images (1080x1350px, 4:5) as HTML, convert to PNG. Two visual asset paths: AI-generated illustrations (Nano Banana) or user-provided photos (Pillow/rembg).
 
-## Tech Stack
+**Activate venv before any script:** `source <skill_dir>/scripts/.venv/bin/activate`
 
-- **Design**: HTML (single file per card, inline CSS/SVG) + Paperlogy font (9 weights)
-- **Illustrations**: Nano Banana API (gemini-3.1-flash-image-preview)
-- **Background removal**: rembg (use when needed)
-- **PNG conversion**: Playwright
-- **Card size**: 1080x1350px (4:5 ratio, Instagram portrait)
+## Scripts (black-box tools -- do NOT read source code)
 
-Scripts directory: `scripts/` relative to this skill file
-Font directory: `assets/fonts/` relative to this skill file
-
-**IMPORTANT: Always activate the virtual environment before running any script:**
-```bash
-source <skill_dir>/scripts/.venv/bin/activate
+**generate_image.py** -- Nano Banana API (text-to-image, edit, multi-reference, batch)
+```
+--prompt "..." --output out.png [--aspect-ratio "1:1"] [--input edit.png] [--refs ref1.png ref2.png]
+--batch batch.json  # [{"prompt":"...","output":"...","aspect_ratio":"1:1","refs":["ref.png"]}]
 ```
 
----
-
-## Scripts Reference (use as black-box tools -- do NOT read source code)
-
-### generate_image.py -- Nano Banana Image Generation
-
-**Single image (text-to-image):**
-```bash
-python <skill_dir>/scripts/generate_image.py \
-  --prompt "A 3D clay style friendly robot icon with glowing cyan eyes, soft rounded edges, matte texture. White background. No text." \
-  --aspect-ratio "1:1" \
-  --output ./images/card1_illust.png
+**html_to_png.py** -- Playwright HTML-to-PNG (2x retina)
+```
+html_to_png.py ./outputs/                    # directory
+html_to_png.py card.html --output card.png   # single file
 ```
 
-**Single image (edit existing image):**
-```bash
-python <skill_dir>/scripts/generate_image.py \
-  --prompt "Change the background color to dark navy blue, keep everything else identical" \
-  --input ./images/card1_v1.png \
-  --output ./images/card1_edited.png
+**process_photo.py** -- Pillow (crop, resize, grayscale, adjust, composite, batch)
+```
+--crop 4:5 --input photo.jpg --output cropped.png
+--resize 1080x1350 --input photo.jpg --output resized.png
+--grayscale --input photo.jpg --output bw.png
+--brightness 0.7 --contrast 1.3 --input photo.jpg --output adj.png
+--composite layout.json --output collage.png  # {"canvas":{...},"layers":[{...}]}
+--batch batch.json  # [{"action":"crop","input":"...","output":"...","ratio":"4:5"}]
 ```
 
-**Single image (with style reference):**
-```bash
-python <skill_dir>/scripts/generate_image.py \
-  --prompt "A 3D clay style icon of a book with sparkles, same visual style as reference" \
-  --refs ./images/card1_final.png \
-  --aspect-ratio "1:1" \
-  --output ./images/card2_illust.png
-```
-
-**Batch mode (parallel generation -- preferred for multiple images):**
-```bash
-# First, write a batch JSON file:
-cat > batch.json << 'EOF'
-[
-  {"prompt": "...", "output": "./images/v1.png", "aspect_ratio": "1:1"},
-  {"prompt": "...", "output": "./images/v2.png", "aspect_ratio": "1:1"},
-  {"prompt": "...", "refs": ["./images/ref.png"], "output": "./images/v3.png", "aspect_ratio": "16:9"}
-]
-EOF
-
-# Then run:
-python <skill_dir>/scripts/generate_image.py --batch batch.json
-```
-
-**Parameters:**
-- `--prompt` (required for single mode): English, narrative description
-- `--output` (required for single mode): Output PNG file path
-- `--aspect-ratio` (optional, default "1:1"): Supported values: 1:1, 1:4, 1:8, 2:3, 3:2, 3:4, 4:1, 4:3, 4:5, 5:4, 8:1, 9:16, 16:9, 21:9
-- `--input` (optional): Input image for editing mode
-- `--refs` (optional): One or more reference images for style consistency
-- `--batch` (optional): Path to JSON file for parallel batch generation
-
-### html_to_png.py -- HTML to PNG Conversion
-
-**Convert all HTML files in a directory:**
-```bash
-python <skill_dir>/scripts/html_to_png.py ./outputs/
-```
-
-**Convert a single HTML file:**
-```bash
-python <skill_dir>/scripts/html_to_png.py ./outputs/card_01.html
-```
-
-**Convert with custom output path:**
-```bash
-python <skill_dir>/scripts/html_to_png.py ./outputs/card_01.html --output ./final/card_01.png
-```
-
-Output: PNG at 1080x1350px viewport, 2x device scale (actual 2160x2700px retina resolution).
-
-### process_photo.py -- Photo Processing (Pillow-based)
-
-For mechanical, precise photo operations. Use this for crop, resize, composite, grayscale.
-For creative edits (color grading, style change), use generate_image.py --input instead.
-
-**Crop to aspect ratio:**
-```bash
-python <skill_dir>/scripts/process_photo.py --crop 4:5 --input photo.jpg --output cropped.png
-```
-
-**Resize to exact dimensions:**
-```bash
-python <skill_dir>/scripts/process_photo.py --resize 1080x1350 --input photo.jpg --output resized.png
-```
-
-**Grayscale conversion:**
-```bash
-python <skill_dir>/scripts/process_photo.py --grayscale --input photo.jpg --output bw.png
-```
-
-**Brightness/contrast/saturation adjustment:**
-```bash
-python <skill_dir>/scripts/process_photo.py --brightness 0.7 --contrast 1.3 --input photo.jpg --output adjusted.png
-```
-
-**Composite (multi-photo collage):**
-```bash
-# First write a layout JSON:
-cat > layout.json << 'EOF'
-{
-  "canvas": {"width": 1080, "height": 1350, "bg": "#000000"},
-  "layers": [
-    {"image": "bg_photo.png", "x": 0, "y": 0, "width": 1080, "opacity": 0.7},
-    {"image": "person_cutout.png", "x": 200, "y": 100, "width": 600},
-    {"image": "small_photo.png", "x": 700, "y": 800, "width": 300, "grayscale": true}
-  ]
-}
-EOF
-python <skill_dir>/scripts/process_photo.py --composite layout.json --output collage.png
-```
-
-**Batch (parallel processing):**
-```bash
-cat > batch.json << 'EOF'
-[
-  {"action": "crop", "input": "a.jpg", "output": "a_crop.png", "ratio": "4:5"},
-  {"action": "grayscale", "input": "b.jpg", "output": "b_bw.png"},
-  {"action": "resize", "input": "c.jpg", "output": "c_resized.png", "dimensions": "1080x1350"}
-]
-EOF
-python <skill_dir>/scripts/process_photo.py --batch batch.json
-```
-
-### rembg -- Background Removal
-
-**Single file:**
-```bash
-rembg i input.png output.png
-```
-
-**Batch (entire directory):**
-```bash
-rembg p ./images_raw/ ./images_nobg/
-```
+**rembg** -- background removal: `rembg i in.png out.png` / `rembg p dir_in/ dir_out/`
 
 ---
 
 ## Workflow
 
-**Actively communicate with the user via AskUserQuestion at each phase.**
+Communicate with the user via **AskUserQuestion** at each phase transition.
 
 ### Phase 1: Content Analysis
-
-1. Extract **3 core messages** from the user's topic/content
-2. Simplify jargon to middle-school comprehension level
-3. Plan the card series structure (number of cards, role of each):
-   - Card 1: Cover (topic + impactful visual -- full-bleed, bold, attention-grabbing)
-   - Cards 2 to N-1: Body cards (core content -- vary layouts: LR split, TB, Z-pattern, grid)
-   - Card N: Ending (quote or vision statement -- never "thank you". Must be as visually dense as other cards, NOT a sparse page with text only. Include illustration + summary grid or key takeaways)
-4. Write titles as **conclusions, not topics** (Tesla Rule)
-   - Bad: "The Effects of Temperature and Humidity"
-   - Good: "Maintaining 25C and 60% Humidity Is Essential for Livestock Growth"
-
--> **AskUserQuestion**: Present the card structure plan and ask the user to confirm or modify
+- Extract 3 core messages, simplify jargon to middle-school level
+- Plan card series: Cover (card 1) / Body cards / Ending (last card)
+- -> **AskUserQuestion**: confirm card structure
 
 ### Phase 2: Design Planning
-
-1. **Color palette** (3-color limit)
-   - primary (extracted from brand/topic) + accent + neutral
-   - 80% neutral tones + 20% accent color principle
-   - Lock as CSS variables: `--primary`, `--accent`, `--neutral`, `--text`, `--bg`
-
-2. **Overall tone/mood** direction
-
-3. **Layout patterns** -- match to content's semantic structure:
-   - Timeline/causation -> Left-Right (LR) layout
-   - Narrative/conclusion-reason -> Top-Bottom (TB) layout
-   - Title-image-description -> Z-pattern layout
-
-4. **Illustration placement and aspect ratio** for each card:
-   - Full card background -> 4:5
-   - Top/bottom banner -> 16:9 or 3:2
-   - Side placement -> 2:3 or 3:4
-   - Icon/symbol -> 1:1
-
--> **AskUserQuestion**: Present color palette and design tone options (e.g., "dark + cyan" vs "bright + pastel" vs "minimal monotone")
+- **If user provided reference design images:** Read each image to analyze its visual language -- color palette, background treatment (dark/light/textured), layout structure, typography weight and spacing, overall emotional tone. Extract these as the style direction for the current project. The reference images tell you *what style to aim for*; the design principles tell you *why it works*.
+- 3-color palette (primary + accent + neutral), lock as CSS variables
+- Match visual tone to content emotion -- not all content is dark and dramatic. Serious politics can be dark navy; informational content can be light and clean; memorial content can be soft and muted; youth/casual content can be bright and playful
+- Match layout pattern to content semantics (timeline->LR, narrative->TB, comparison->Z)
+- Choose illustration aspect ratios per card based on placement
+- -> **AskUserQuestion**: present palette/tone options
 
 ### Phase 3: Visual Assets
 
-**Two paths depending on whether the user provides photos:**
+**Path A -- User photos:** Read photos -> crop/resize with process_photo.py -> decide treatment per photo (rembg for cutouts, Nano Banana edit mode for color/mood, CSS filters for render-time effects) -> integrate into HTML
 
-#### Path A: User provides photos -> Photo Processing
+**Path B -- AI illustrations:** Generate 2-3 style variations in batch -> AskUserQuestion to pick style -> fine-tune with edit mode -> use first card's image as `--refs` for ALL subsequent cards to maintain character/style consistency -> rembg for background removal on dark cards
 
-Refer to `references/photo-processing-guide.md` for detailed techniques.
-
-1. **Read** user-provided photo(s) to assess quality and composition
-2. **Crop/resize** to card dimensions:
-   ```bash
-   python <skill_dir>/scripts/process_photo.py --crop 4:5 --input photo.jpg --output cropped.png
-   ```
-3. **Decide on treatment** for each photo:
-   - Need person cutout? -> `rembg i photo.png cutout.png`
-   - Need grayscale? -> `process_photo.py --grayscale` or CSS `filter: grayscale(1)`
-   - Need color/mood change? -> `generate_image.py --input photo.png --prompt "Apply a cool blue cinematic tone, keep composition identical"`
-   - Need multi-photo collage? -> `process_photo.py --composite layout.json`
-4. Integrate processed photos into HTML:
-   - As full-bleed background: `background-image: url('./images/photo.png'); background-size: cover;`
-   - As positioned element: `<img src="./images/cutout.png" style="position:absolute; ...">`
-   - Apply CSS gradient overlay, glassmorphism, etc. for text readability
-5. -> **AskUserQuestion**: Show processed photos and ask if the treatment is right
-
-#### Path B: No user photos -> Generate illustrations with Nano Banana
-
-Refer to `references/image-prompt-guide.md` for prompt writing. All prompts must be in English, narrative form.
-
-#### Step 3-1: Establish Style (First Card)
-
-1. Write **2-3 style variation** prompts and generate in **batch mode (parallel)**:
-   ```bash
-   source scripts/.venv/bin/activate
-   python scripts/generate_image.py --batch batch.json
-   ```
-   Example `batch.json`:
-   ```json
-   [
-     {"prompt": "A 3D clay style icon of ...", "output": "card1_v1.png", "aspect_ratio": "1:1"},
-     {"prompt": "A flat design icon of ...", "output": "card1_v2.png", "aspect_ratio": "1:1"},
-     {"prompt": "An isometric scene of ...", "output": "card1_v3.png", "aspect_ratio": "1:1"}
-   ]
-   ```
-   For a single image:
-   ```bash
-   python scripts/generate_image.py --prompt "..." --aspect-ratio "1:1" --output card1_v1.png
-   ```
-2. **Read generated images** to visually compare them
-3. -> **AskUserQuestion**: Ask the user to pick their preferred style
-4. If the selected image is 80%+ satisfactory, use **image editing mode** for fine-tuning:
-   ```bash
-   python scripts/generate_image.py --prompt "Change the background to navy blue" --input card1_v1.png --output card1_final.png
-   ```
-5. The finalized image becomes the **style reference** for the entire series
-
-#### Step 3-2: Remaining Card Illustrations (Character & Style Consistency is CRITICAL)
-
-**The #1 visual quality issue is inconsistent illustration style across cards.** All cards in a series MUST feel like they belong together. This means:
-- The **same character/mascot** should appear across multiple cards (not a different character on every card)
-- The **same rendering style** (same 3D clay texture, same color temperature, same level of detail)
-- The **same color palette** in illustrations matching the card's CSS color scheme
-
-To achieve this, ALWAYS provide the first card's finalized illustration as `--refs` for every subsequent image generation. Include explicit instructions in the prompt:
-- "Same character as in the reference image"
-- "Identical 3D clay rendering style, same color temperature and texture"
-- "Same visual universe as the reference"
-
-Generate remaining illustrations in **batch mode (parallel)**:
-```bash
-python scripts/generate_image.py --batch remaining_cards.json
-```
-Example `remaining_cards.json`:
-```json
-[
-  {"prompt": "..., same visual style as reference", "refs": ["card1_final.png"], "output": "card2_illust.png", "aspect_ratio": "1:1"},
-  {"prompt": "..., same visual style as reference", "refs": ["card1_final.png"], "output": "card3_illust.png", "aspect_ratio": "1:1"},
-  {"prompt": "..., same visual style as reference", "refs": ["card1_final.png"], "output": "card4_illust.png", "aspect_ratio": "16:9"}
-]
-```
-Single image with reference:
-```bash
-python scripts/generate_image.py \
-  --prompt "A 3D clay style icon of a growing plant, same visual style as reference" \
-  --refs card1_final.png \
-  --aspect-ratio "1:1" \
-  --output card2_illust.png
-```
-
-#### Step 3-3: Background Removal (Critical)
-
-Read each generated image to determine if background removal is needed. **Using a white-background image on a dark card looks "pasted on" -- in most cases, background removal is required.**
-
-Decision criteria:
-- Dark card background + bright image background -> **always remove with rembg**
-- Light card background + light image background -> removal unnecessary
-- Image used as full card background -> removal unnecessary
-- Image must float over text/content -> **always remove with rembg**
-
-```bash
-source scripts/.venv/bin/activate
-# Single file
-rembg i input.png output.png
-
-# Batch: process entire directory at once
-rembg p ./images_raw/ ./images/
-```
-
-After background removal, integrate images naturally with CSS:
-- **White Glow** (dark backgrounds): `filter: drop-shadow(0 0 30px rgba(255,255,255,0.2))`
-- **Soft Shadow** (light backgrounds): `filter: drop-shadow(0 8px 20px rgba(0,0,0,0.3))`
-- **Background blending**: `radial-gradient` beneath the image for subtle glow
-
-### Phase 4: HTML Generation + Preview
-
-Refer to `references/css-patterns.md` for base templates and patterns.
-
-1. Generate **1 HTML file per card** (1080x1350px)
-2. Illustrations saved as **separate image files**, referenced via path in HTML (`<img src="./images/card1_illust.png">`)
-3. Decorative elements via inline SVG + CSS
-
-**CRITICAL: Sizing & Density Guidelines**
-
-Too much whitespace is the single most common quality issue. Professional card news feels DENSE and FULL -- not airy and sparse. When in doubt, tighten spacing, enlarge elements, and fill gaps.
-
-| Element | Size | Notes |
-|---------|------|-------|
-| Main title | 72-96px | Go large. Single-word titles can be 120px+ |
-| Subtitle | 30-40px | |
-| Body text | 24-30px | |
-| Caption/meta | 14-18px | |
-| Card padding | 36-48px | **Never exceed 50px.** Less padding = more content space |
-| Illustration/Photo | 600-900px wide | Should dominate the card. 55-80% of card width |
-| Element gap | 12-24px | **Never exceed 28px.** Tighter is almost always better |
-| Section dividers | 2-4px lines | Thin, not thick |
-
-Key principles:
-- **85-95% canvas fill**: Elements should cover almost the entire card. The reference promotional materials the user showed had nearly zero wasted space
-- **Tight, tight, tight**: Default CSS spacing is almost always too generous. Actively reduce padding, margin, and gap values
-- **Photos should FILL the frame**: Background photos should cover the full card with no visible card background color peeking through
-- **Bold typography**: Titles should be imposing and large. When in doubt, go bigger
-- **Edge-to-edge**: Photos, gradient bars, and decorative elements should span full width (no side padding)
-- **Overlap for dynamism**: Allow illustrations to overlap text areas or break grid boundaries
-- **No empty spacer divs**: Every pixel should serve a purpose. If space exists, either expand adjacent elements or add content
-- **Test by squinting**: When you Read the PNG, squint at it. If you see large uniform-color areas with no content, those are dead zones that need fixing
-
-**Design Quality Checklist (verify for every card):**
-- [ ] **Canvas density**: Elements fill 85-95% of card area. Squint test: no large empty zones
-- [ ] **Title is bold enough**: Main title is 72px+ and dominates the card
-- [ ] **Illustration/Photo is prominent**: 600px+ wide, visually dominant, fills frame
-- [ ] **Padding is tight**: Card padding is 36-48px, never more than 50px
-- [ ] **Gaps are minimal**: Element spacing is 12-24px, never more than 28px
-- [ ] Image background integrates naturally (no white residue after rembg)
-- [ ] Gradient mask or glassmorphism ensures text readability
-- [ ] Gray dimming applied to all non-essential text
-- [ ] Corner anchors placed (page number, logo, decorative marks)
-- [ ] Key phrases highlighted with `<span>` (different weight/color)
-- [ ] White glow or drop-shadow applied to illustrations
-
-4. **Generate ALL cards** as HTML first (applying the sizing guidelines above)
-
-5. **Visual Review Loop (critical for quality -- do NOT skip this):**
-   a. Convert all HTML to PNG:
-      ```bash
-      python <skill_dir>/scripts/html_to_png.py ./outputs/
-      ```
-   b. **Read every PNG** to visually evaluate the actual rendered result
-   c. Check across all cards for these specific issues:
-      - **Density**: Do elements fill 75-85% of canvas? Any card that feels sparse or has large empty areas MUST be fixed
-      - **Sizing**: Are titles 64px+? Are illustrations 500px+ wide? Is padding under 60px?
-      - **Consistency**: Are font sizes, padding, and spacing uniform across ALL cards?
-      - **Illustration style**: Do all illustrations look like they belong to the same series? Same character, same rendering style?
-      - **Ending card**: Is it as visually rich as body cards? (Ending cards often end up too sparse)
-      - **Text readability**: Can all text be read clearly against its background?
-   d. If ANY issues are found:
-      - Identify the specific CSS values causing the problem
-      - **Apply fixes across ALL HTML files at once** (not one card at a time)
-      - Re-convert to PNG
-      - Read again to verify the fix worked
-   e. Repeat until all cards pass visual inspection
-
-6. -> **AskUserQuestion**: Show the final PNGs and collect feedback (adjustments, satisfaction)
-7. Apply user feedback if any, re-convert, and finalize
-
-### Phase 5: Final Conversion
-
-```bash
-source scripts/.venv/bin/activate
-python scripts/html_to_png.py ./output/
-```
-
--> **AskUserQuestion**: Final satisfaction check, individual card revision requests
+### Phase 4: HTML Generation + Visual Review Loop
+1. Generate all HTML cards (images as separate files, NOT base64)
+2. Convert all to PNG with html_to_png.py
+3. **Read every PNG** to visually evaluate
+4. If density/sizing/consistency issues found: fix CSS across ALL HTMLs at once, reconvert, re-read
+5. Repeat until all cards pass inspection
+6. -> **AskUserQuestion**: show finals, collect feedback
 
 ---
 
-## HTML Generation Rules
+## Design Principles (Paperology-based tacit knowledge)
 
-### Base Structure
+These principles are what distinguish professional card news from amateur output. They represent non-obvious design decisions learned from Paperology design philosophy and refined through iterative testing.
 
-- No external URL references (no CDN, no web fonts, no internet dependencies)
-- Illustrations stored as **separate image files**, referenced via relative/absolute path (`<img src="./images/card1_illust.png">`)
-  - Do NOT use base64 embedding -- it bloats file size unnecessarily
-  - Playwright resolves local file paths correctly for PNG conversion
-- Load Paperlogy TTF via `@font-face` with **absolute paths** to `assets/fonts/`
-- Fixed viewport: `<div style="width:1080px; height:1350px; overflow:hidden; position:relative;">`
-- `word-break: keep-all` for Korean text line-breaking
-- CSS Grid/Flexbox-based layouts
+### Emphasis by Reduction, Not Addition
+Dim non-essential text to gray (#888) instead of coloring keywords. This "gray dimming" technique is counter-intuitive but produces far more sophisticated results than colored highlights. Avoid red for general emphasis -- it signals danger. However, red can be used deliberately for urgency or confrontational messaging where that danger signal is the intended effect.
 
-### Paperlogy Font Usage Guide
+### Titles Are Conclusions, Not Topics (Tesla Rule)
+Bad: "Temperature and Humidity Effects" / Good: "25C and 60% Humidity Are Essential for Growth"
+Exception: Explanatory content can use question-format titles ("[What does this law do?]") and event content can lead with the event name + date. Match the title format to the content's purpose: persuade→conclusion, explain→question, announce→event.
 
-Use **at most 3 weights per card**. Ensure strong contrast between weights (400+500 bad, 400+800 good).
+### Density Is Quality
+The #1 recurring quality issue is excessive whitespace. Professional card news typically fills 85-95% of the canvas -- though memorial, respectful, or contemplative content can use intentional whitespace as an emotional device. Sizing guidelines learned through 4 iterations at 1080x1350:
+- Padding: 36-48px (never >50). Gaps: 12-24px (never >28)
+- Titles: 72-96px. Illustrations/photos: 600-900px wide
+- Background photos must fill the entire frame edge-to-edge
+- **Squint test**: Read the PNG and squint. Large uniform-color areas with no content are dead zones
 
-| Role | Weight Name | font-weight | Usage |
-|------|------------|-------------|-------|
-| Main title | ExtraBold/Black | 800-900 | Card's core message, highest visual impact |
-| Subtitle | Bold/SemiBold | 600-700 | Section dividers |
-| Body text | Regular/Medium | 400-500 | Readable explanation text |
-| Caption | Light/ExtraLight | 200-300 | Sources, page numbers |
-| Decorative | Thin | 100 | Background watermark (opacity 5%) |
+### Background Is Stage, Not Star
+When text density is high, suppress the background (darken, blur, overlay). Always use gradient masks behind text over photos. Use glassmorphism panels for structured content over complex backgrounds.
 
-Additional rules:
-- Titles: `letter-spacing: -0.03em to -0.05em` (chunky, impactful)
-- Maintain the same weight combination across the entire series
+### Character Consistency Across Series
+The biggest visual quality issue in AI-illustrated series is inconsistent character/style across cards. Always provide the first card's finalized illustration as `--refs` for every subsequent generation, with explicit prompts: "same character, identical rendering style, same color temperature."
 
----
+### Visual Review Loop (Never Skip)
+Generate HTML -> convert to PNG -> Read every PNG -> check density, sizing consistency, illustration style, ending card fullness -> fix across ALL HTMLs at once -> reconvert -> re-read. This self-review catches issues before showing to the user.
 
-## Core Design Principles (Paperology-Based)
+### 3-Color Discipline
+Lock 3 colors as CSS variables (primary + accent + neutral). 80% neutral tones, 20% accent. Extract dominant color from brand/topic.
 
-These are the primary design standards. See `references/design-principles.md` for comprehensive details. The rules below are mandatory.
+### Bookending and Cinematic Endings
+Open and close the series with matching visual tone. End with a vision statement or quote -- never "감사합니다" or "Thank you."
 
-### Typography
-- **Gray Dimming for emphasis**: Instead of coloring keywords, dim non-essential text to `color: #888`
-- Never use red for emphasis (signals warning/danger)
-- Within a single sentence, wrap only key phrases in `<span>` with different weight/color
+### Corner Anchors
+Place small elements at all 4 corners (page number, brand name, date, decorative mark "+") for visual stability and framing.
 
-### Color
-- **3-color limit per card** (primary + accent + neutral)
-- 80% neutral tones + 20% accent color
-- Extract dominant color from brand/topic to build the palette
-- Lock colors as CSS variables and apply consistently
+### Font Weight as Hierarchy
+Paperlogy 9 weights (100-900) in `assets/fonts/`. Use max 3 weights per card with strong contrast (400+800 good, 400+500 bad). Titles get letter-spacing -0.03 to -0.05em for chunky impact. Use weight 100 at 5% opacity for background watermark text.
 
-### Background + Readability
-- Text over images: **gradient mask required** (`linear-gradient` aligned to text direction)
-- Complex backgrounds: **glassmorphism** (`backdrop-filter: blur(10px); background: rgba(255,255,255,0.15)`)
-- Background is "the stage", not "the star" -- reduce background's role when text density is high
+### Tool Role Division
+- **Pillow** (process_photo.py): mechanical, precise operations (crop, resize, composite, grayscale)
+- **Nano Banana** (generate_image.py --input): creative AI edits (color grading, style transfer, mood change)
+- **CSS filters**: render-time effects (grayscale, brightness, hue-rotate, blur, sepia)
+- **rembg**: background removal for cutouts
 
-### Shadow / Depth
-- Soft shadow: `box-shadow: 0 4px 15px rgba(0,0,0,0.4)` (40-50% opacity, wide blur)
-- White Glow on dark backgrounds: `filter: drop-shadow(0 0 20px rgba(255,255,255,0.3))`
-- Z-index layering: background(z:1) -> text(z:2) -> cutout image(z:3)
-
-### Layout
-- **Big-Medium-Small** size hierarchy (60-30-10%)
-- Corner anchors: small elements at all four corners (page number, logo, decorative marks) for stability
-- Fill empty space with decorative SVG or **background typography watermark** (opacity 5%, font-size 15rem)
-
-### Content
-- Titles = conclusions (never topics)
-- Extract 3 core keywords and display them as visually separated chunks
-- Bookending: open and close series with the same visual/message
-- Cinematic Ending: end with a quote or vision statement, never generic "thank you"
-
-### Icons / Assets
-- Uniform style within a series (all flat OR all 3D clay -- never mix)
-- Consistent stroke width, fill style, and corner radius
-
-### Dimming Effect
-- When highlighting a specific list item: active item `opacity: 1`, rest `opacity: 0.3`
+### Edit, Don't Regenerate
+If a Nano Banana image is 80% satisfactory, use edit mode (`--input`) to refine rather than regenerating from scratch.
 
 ---
 
-## Detailed References
+## HTML Rules (only non-obvious ones)
 
-For deeper techniques and code examples, consult:
+- Images as separate files referenced by path -- never base64 (bloats HTML to megabytes)
+- `@font-face` with absolute paths to `assets/fonts/`
+- `word-break: keep-all` for Korean text
+- Fixed viewport: `width:1080px; height:1350px; overflow:hidden; position:relative`
+- After rembg, apply white glow on dark backgrounds: `filter: drop-shadow(0 0 30px rgba(255,255,255,0.2))`
 
-- `references/design-principles.md` -- Comprehensive Paperology design principles (most important reference)
-- `references/css-patterns.md` -- Ready-to-use CSS code snippets
-- `references/image-prompt-guide.md` -- Nano Banana image prompt writing guide
-- `references/photo-processing-guide.md` -- Photo processing with Pillow, Nano Banana edit mode, and CSS filters
+---
+
+## References
+
+Consult these only when you need deeper technique details:
+- `references/design-principles.md` -- Paperology design philosophy and advanced techniques
+- `references/image-prompt-guide.md` -- Nano Banana prompt patterns for card news illustrations
+- `references/css-patterns.md` -- CSS code patterns for common card news layouts and effects
+- `references/photo-processing-guide.md` -- Photo processing decision criteria and patterns
