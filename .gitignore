@@ -1,4 +1,6 @@
 /References/
+card-news-workspace/
+evals/
 .DS_Store
 .env
 .env.*
