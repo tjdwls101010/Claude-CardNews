@@ -35,6 +35,11 @@ html_to_png.py card.html --output card.png   # single file
 
 **rembg** -- background removal: `rembg i in.png out.png` / `rembg p dir_in/ dir_out/`
 
+**After rembg, trim transparent pixels** to minimize bounding box — this makes CSS positioning predictable (`bottom`, `width` refer to actual subject, not invisible space). **Exception: Depth Sandwich** — when layering cutout over the original photo, do NOT trim; both images must share identical dimensions for pixel-perfect alignment.
+```
+python3 -c "from PIL import Image; img=Image.open('out.png'); img.crop(img.getbbox()).save('out.png')"
+```
+
 ---
 
 ## Workflow
@@ -56,7 +61,7 @@ Communicate with the user via **AskUserQuestion** at each phase transition.
 
 ### Phase 3: Visual Assets
 
-**Path A -- User photos:** Read photos -> crop/resize with process_photo.py -> decide treatment per photo (rembg for cutouts, Nano Banana edit mode for color/mood, CSS filters for render-time effects) -> integrate into HTML
+**Path A -- User photos:** Read photos -> crop/resize with process_photo.py -> decide treatment per photo (rembg for cutouts + **trim transparent pixels**, Nano Banana edit mode for color/mood, CSS filters for render-time effects) -> integrate into HTML
 
 **Path B -- AI illustrations:** Generate 2-3 style variations in batch -> AskUserQuestion to pick style -> fine-tune with edit mode -> use first card's image as `--refs` for ALL subsequent cards to maintain character/style consistency -> rembg for background removal on dark cards
 
@@ -86,6 +91,7 @@ Three-layer system: **Foundation** (structural logic) → **Techniques** (execut
 - **Color selection**: Choose colors by wheel relationship (complementary→energy, analogous→calm, split complement→sophistication). Shift to tints/shades (HSL L=25-40% or 65-85%) to escape cliché. Warm accents need less area (10-15%), cool need more (20-25%).
 - **Typography contrast**: 5 dimensions available with Paperlogy -- Size, Weight, Form (caps/lowercase), Typographic color (density), Direction. Each hierarchy level differs in 2-3 dimensions simultaneously. Reverse type (white on dark) needs heavier weight / larger size.
 - **Background as stage**: Suppress when text density is high. Gradient masks follow text position. Glassmorphism for complex backgrounds.
+- **Depth Sandwich (Z-Layer)**: 인물 사진이 있을 때, 원본 배경 → 텍스트 → 배경 제거 컷아웃 순으로 레이어를 쌓으면 텍스트가 인물 뒤에 위치하는 깊이감이 생긴다. rembg로 컷아웃을 만들고 z-index로 레이어 순서를 제어한다. 모든 인물 카드에 적용할 필요는 없다 — 강조/임팩트가 필요한 커버 카드나 핵심 카드에 선택적으로 사용.
 - **Density**: 85-95% canvas utilization. Enemy is trapped white space (accidental gaps), not white space itself. Padding 36-48px, titles 72-96px, body 24-28px, illustrations 600-900px. Background photos full-bleed.
 - **Bookending**: Match cover and ending card visual tone. End with vision statement, never "감사합니다."
 
@@ -104,11 +110,11 @@ Three-layer system: **Foundation** (structural logic) → **Techniques** (execut
 
 ## HTML Rules (only non-obvious ones)
 
-- Images as separate files referenced by path -- never base64 (bloats HTML to megabytes)
-- `@font-face` with absolute paths to `assets/fonts/`
+- Images as separate files referenced by **relative path** from the HTML file -- never base64, never absolute paths. This ensures cards work in localhost, Cursor Preview, and file:// alike
+- `@font-face` with relative paths to `assets/fonts/` (e.g., `../../fonts/` from a template directory)
 - `word-break: keep-all` for Korean text
 - Fixed viewport: `width:1080px; height:1350px; overflow:hidden; position:relative`
-- After rembg, apply white glow on dark backgrounds: `filter: drop-shadow(0 0 30px rgba(255,255,255,0.2))`
+- After rembg, **always trim** transparent pixels, then apply white glow on dark backgrounds: `filter: drop-shadow(0 0 30px rgba(255,255,255,0.2))`
 
 ---
 
