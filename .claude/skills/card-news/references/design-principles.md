@@ -1,184 +1,266 @@
 # Card News Design Principles
 
-Principles for designing professional card news at 1080x1350px. Each principle explains *why* it works -- use them both as design guides during creation and as diagnostic criteria when reviewing generated PNGs.
+Design guide for 1080x1350px card news. Organized in three layers: **Foundation** (structural logic) → **Techniques** (card-news-specific execution) → **Signature Style** (Paperology defaults, conditionally applied). Use as both creation guide and review diagnostic.
 
 ---
 
-## 1. Typography -- Hierarchy Through Weight and Spacing
+# Layer 0: Intentionality
 
-### Weight Creates Drama, Not Labels
-
-Beginners apply `font-weight: bold` uniformly and wonder why everything looks flat. Professional typography uses the full 100-900 spectrum, but the key insight is that **contrast between weights matters more than the weights themselves**. A pairing of 400 (regular body) against 800 (extra-bold title) creates instant visual hierarchy because the eye registers the difference in density. A pairing of 400 against 500 is nearly invisible -- the brain perceives them as the same level of importance.
-
-Use a maximum of 3 weight levels per card. More than 3 creates ambiguity about what's important. Paperlogy's 9 weights (100-900) give fine control: reserve 100-200 for decorative watermarks and source attributions where the text should be felt but not consciously read.
-
-### Letter-spacing: Mass vs Breath
-
-Tightening letter-spacing on titles (-0.03 to -0.05em) packs the characters into a single visual chunk -- the word gains a sense of mass and authority, like a headline stamped into the page. This is why large type in magazines and posters always looks "chunkier" than body text: the letters are physically closer together.
-
-Body text needs the opposite treatment: default or slightly positive spacing, because reading flow depends on each character having breathing room. Captions and labels benefit from *widened* tracking (+0.05em) paired with uppercase -- this makes tiny text feel deliberate rather than accidentally small.
-
-### Emphasis by Reduction, Not Addition
-
-Beginners reach for red or bright colors to emphasize keywords, but red triggers a danger/warning response in the viewer's brain -- it's the color of error messages, stop signs, and alerts. Professional designers take the opposite approach: leave the key text at full brightness and dim everything else to gray (#888). This "reverse highlighting" works because the eye is naturally drawn to the brightest element in a field of muted tones. The emphasis emerges from contrast with its surroundings, not from the color applied to it.
-
-Within a single sentence, wrap only 1-2 keywords in the accent color + heavier weight. The rest of the sentence gets dimmed. This creates a scannable rhythm where the eye can extract the core message without reading every word.
-
-**Review diagnostic:** If a card feels "loud" or chaotic, check whether emphasis was added (colored keywords) rather than subtracted (dimmed surroundings). Switch to gray dimming.
+When something looks wrong, ask **"what's too similar?"** before asking what to change. Most card news design problems are unintentional similarity — two elements that differ slightly but not enough, creating *conflict* rather than contrast. A weight of 400 next to 500 looks like a mistake. A gap of 20px next to 24px looks accidental. Either make them the same or make them obviously different.
 
 ---
 
-## 2. Color -- Restraint Creates Sophistication
+# Layer 1: Foundation
 
-### The 3-Color Discipline
-
-Every additional color in a composition competes for the viewer's attention and dilutes the impact of the accent. Lock exactly 3 chromatic roles as CSS variables: primary (from the brand/topic), accent (a lighter variation), and neutral (the background tone). All other color in the card should be achromatic -- black, white, and grays.
-
-The 80/20 ratio is the mechanism that makes accents work: approximately 80% of the card's surface area should be achromatic tones, with chromatic color occupying only the remaining 20%. Think of a single red flower in a field of green -- the flower commands attention *because* it's rare. If the entire field were red, nothing would stand out.
-
-### Variable Locking Across Series
-
-Define the palette once in `:root` and never hard-code color values in individual elements. This isn't just good engineering -- it's a design principle. When all cards in a series reference the same variables, the series develops a brand-like visual cohesion. The moment one card uses a hard-coded `#FF5733` that doesn't match the palette, the series feels inconsistent, as if different designers worked on different cards.
-
-**Review diagnostic:** If a card feels visually "off" compared to others in the series, check for hard-coded colors that bypass the CSS variables.
+Apply the four structural principles in order: **Proximity → Alignment → Repetition → Contrast.** This is also the diagnostic order — when a card looks "off," check Proximity first. Fixing an earlier-layer issue often resolves what seemed like a later-layer problem.
 
 ---
 
-## 3. Layout -- Guiding the Eye
+## 1. Proximity
 
-### Big-Medium-Small: The Entry Point Problem
+The card-news-specific insight: **gap ratio is hierarchy.** When every gap is the same (e.g., 20px between all elements), the card reads as a flat list with no structure.
 
-When every element on a card is roughly the same size, the viewer's eye has no entry point -- the brain scans aimlessly and fatigues. The Big-Medium-Small principle (60-30-10% of visual weight) solves this by creating a hierarchy of attention: the Big element (main visual or title) anchors the eye first, Medium elements (body text, subheadings) deliver the message, and Small elements (page number, source, date) provide context without competing.
+- **Intra-group gap** (title + subtitle, icon + label, stat + description): 8-16px — these form a single visual unit
+- **Inter-group gap** (title block ↔ body block, body ↔ footer): 32-48px — distinct sections
+- Aim for roughly 3:1 ratio between inter-group and intra-group. The ratio communicates hierarchy; absolute values are secondary.
 
-A card composed entirely of Medium elements feels like a wall of text. Every card needs at least one Big element to serve as an anchor.
+**Squint test**: Squint at the rendered PNG until text blurs. Count visual clusters. Target: 2-4 clusters (title zone, content zone, footer, maybe image zone). 6+ clusters = elements need tighter grouping. 1 blob = no internal structure.
 
-### Content Semantics Drive Layout Choice
-
-The layout pattern should match the logical structure of the content, not be chosen arbitrarily:
-- **Timeline or cause-and-effect** → Left-Right (LR) split, because the brain reads causation as left-to-right progression
-- **Conclusion followed by reasoning** → Top-Bottom (TB), because the headline-then-explanation pattern reads naturally downward
-- **Title + image + description** → Z-pattern, tracing the natural Z-shaped scan path across the card
-
-Mismatches create cognitive friction: placing a timeline vertically forces the viewer to read against their spatial intuition.
-
-### Corner Anchors: Invisible Framing
-
-Placing small elements at all four corners (page number, brand name, date, decorative mark like "+") creates invisible boundary lines that frame the composition. The card feels architecturally solid even without a visible border -- the eye perceives the corners as structural supports. Without them, content floats in undefined space.
-
-### Four-Quadrant Balance
-
-Divide the card into four quadrants mentally. If one quadrant is significantly emptier than the others, the composition feels lopsided -- designers describe this as "visual weight" imbalance. Fill light quadrants with subtle decorative elements (geometric shapes, dots, lines) at opacity 0.08-0.15, just enough to be sensed without being consciously noticed.
-
-**Review diagnostic:** If a card feels "unbalanced" or "empty on one side," check the four-quadrant weight distribution.
+The inverse matters equally: a caption equidistant between two images belongs to neither. Move it decisively close to the one it describes.
 
 ---
 
-## 4. Background -- Stage, Not Star
+## 2. Alignment
 
-### Role Reduction
+**One alignment axis per card.** Body cards: flush-left (creates the strongest structural backbone). Cover/ending cards: centered is a valid conscious choice — but if centering, vary line lengths dramatically so it reads as obviously centered rather than accidentally off-axis.
 
-Beginners fill backgrounds with flashy, detailed images and then struggle to make text readable. Professional designers treat the background as a stage set: its job is to establish mood and context, not to be the focal point. When text density increases, the background's role must be *actively suppressed* -- darkened, blurred, or overlaid -- so the text can do its job.
+The card-news trap: flush-left text with an image that doesn't share any text edge → trapped white space between them. Fix: snap the image's left edge to the text's left edge, or its right edge to the card's right padding boundary.
 
-This is the principle Paperology calls "role reduction": the moment an image starts competing with the text for the viewer's attention, cover it with a gradient, dim it, or blur it. The background should be felt, not studied.
-
-### Gradient Masks Follow Text Position
-
-When placing text over a photo, the gradient direction must follow the text position: text at the bottom gets a bottom-to-top gradient (dark at bottom, transparent at top), text on the left gets a left-to-right gradient. The gradient transitions the photo smoothly into a readable surface. Use 6-7 opacity stops for a natural, cinematic feel rather than a harsh 2-stop cutoff.
-
-### Suppression Scales with Text Density
-
-The amount of background suppression should be proportional to how much text sits on top:
-- **Title only:** Light treatment -- brightness 0.7 is enough
-- **Title + 2-3 lines of body:** Moderate -- brightness 0.4 plus a slight blur
-- **5+ lines of dense text:** Aggressive -- brightness 0.2, strong blur, or a glassmorphism panel
-
-Glassmorphism (frosted glass effect) is particularly effective when the background context matters -- maps, cityscapes, complex scenes -- because the viewer's brain can sense the environment through the blur without being distracted by details.
-
-**Review diagnostic:** If text is hard to read over a background image, the background isn't being suppressed enough for the text density level.
+In CSS: a consistent `padding-left` (e.g., 48px) establishes the primary alignment edge. `grid-template-columns` creates additional invisible guides. All text blocks, image edges, and decorative elements should relate to these edges.
 
 ---
 
-## 5. Depth & Shadow -- Subtlety Reads as Quality
+## 3. Repetition
 
-### Soft Shadows Only
+CSS variables are Repetition implemented as engineering. Extend beyond colors to all design tokens:
 
-Sharp, dark shadows (alpha 0.5+, minimal blur) are the hallmark of amateur digital design -- they look like a Photoshop default from the 2000s. Professional shadows are soft, wide, and nearly transparent (alpha 0.1-0.15 for boxes, wide blur radius). They mimic how light naturally diffuses in the real world: you rarely see a hard-edged shadow in a well-lit room. The result feels physical and grounded rather than digitally "pasted on."
+```css
+:root {
+  --color-primary: ...; --color-accent: ...; --color-neutral: ...;
+  --gap-tight: 12px; --gap-section: 36px; --padding-card: 44px;
+  --title-size: 84px; --title-weight: 800;
+  --body-size: 26px; --body-weight: 400;
+}
+```
 
-### White Glow on Dark Backgrounds
+The moment one card hard-codes a raw value that breaks the token system, it feels like a different designer made it. This applies to spacing and typography as much as color.
 
-When a background-removed (rembg) cutout is placed on a dark card, it looks disconnected -- floating in a void without any relationship to the surface. A subtle white glow (`drop-shadow` with rgba(255,255,255,0.2) and 30px spread) creates an implied light source behind the subject, integrating it into the composition. This is the digital equivalent of backlighting in photography.
-
-Use `filter: drop-shadow()` for transparent PNGs (it follows the image silhouette) rather than `box-shadow` (which creates a rectangular shadow around the entire image box).
-
-### Z-index Layering for Cinematic Depth
-
-The layering order background(z:0) → gradient overlay(z:1) → text(z:3) → cutout subject(z:4) creates a sense of depth on a flat card. When text sits *behind* a person cutout, the viewer perceives the person as physically present in front of the information -- the same depth illusion used in movie poster design.
-
-**Review diagnostic:** If a cutout image looks "pasted on" or "floating," add a white glow on dark backgrounds or check the z-index layering order.
+Across a series: same corner element pattern, same heading-to-body size ratio, same accent usage pattern on every card. This is what makes 8-10 cards feel like one series rather than a random collection.
 
 ---
 
-## 6. Content Structure -- Feed the Conclusion
+## 4. Contrast
 
-### The Tesla Rule
+**The central problem in AI-generated card news is timid differentiation.** Claude naturally gravitates toward moderate, "safe" choices — weight 500 vs 600, size 32px vs 40px. This produces conflict, not contrast. The card looks uncertain rather than professional.
 
-Amateurs write titles like "Temperature and Humidity Effects" -- topic labels that force the viewer to read the body text to understand the point. Professionals write conclusions: "25C and 60% Humidity Are Essential for Growth." The title alone delivers the message. Elon Musk doesn't title a slide "Job Creation Data" -- he writes "Tesla Created 125,000 Jobs in 10 Years."
+### Conflict thresholds for 1080x1350px
+These are empirically observed thresholds where differences stop reading as intentional:
+- **Weight**: gap <200 units reads as conflict (400 vs 500 ✗, 400 vs 700 ✓)
+- **Size**: ratio <2:1 reads as conflict (36px vs 42px ✗, 28px vs 84px ✓)
+- **Color**: two hues at similar HSL lightness merge — grayscale mental test catches this
 
-| Amateur (topic) | Professional (conclusion) |
+### Stacking contrasts
+Single-dimension contrast is weak. Each hierarchy transition should differ in 2-3 dimensions simultaneously. Title → body should differ in size AND weight AND tracking, not size alone. The table in the Typography section below shows a tested stacking pattern.
+
+### Bold variation
+When breaking a series pattern for emphasis (question card, reveal card, transition), break it dramatically. A card that's slightly different looks like an error. A card that's boldly different looks like a statement.
+
+---
+
+# Layer 2: Techniques
+
+Each section addresses card-news-specific knowledge that goes beyond general design principles.
+
+---
+
+## 5. Typography
+
+> Foundation: **Contrast**, **Repetition**
+
+Paperlogy's 9 weights (100-900) in a single sans serif family means structure contrast (serif vs sans serif) is unavailable. Compensate by exploiting all other dimensions aggressively.
+
+### Tested stacking pattern for Paperlogy at 1080x1350px
+
+| Element | Size | Weight | Form | Tracking | Line-Height |
+|---------|------|--------|------|----------|-------------|
+| Hero stat | 120-160px | 800-900 | lowercase | -0.03em | 1.0 |
+| Title | 72-96px | 700-800 | mixed | -0.03em | 1.05-1.15 |
+| Subtitle label | 16-20px | 500-600 | ALL CAPS | +0.08em | 1.4 |
+| Body text | 24-28px | 400 | lowercase | 0 | 1.4-1.5 |
+| Caption/source | 14-18px | 300 | ALL CAPS | +0.05em | 1.3 |
+
+Notice: every adjacent pair differs in 3+ dimensions. Title → Body: size (3:1), weight (800→400), tracking, line-height. Subtitle → Body: size, form (CAPS→lowercase), tracking.
+
+### Non-obvious typography decisions
+
+**Form contrast via case**: ALL CAPS + wide tracking works for short labels (2-4 words max). Beyond 4-5 words, all caps degrades readability because word silhouettes become uniform rectangles. Body text and long titles always stay in sentence case.
+
+**Typographic color**: squint at the card — each text block should read as a different shade of density. If all blocks look the same gray, increase variation (adjust weight spread, line-height differences, or tracking differences). Title blocks should feel like dense dark masses; captions should feel like airy light textures.
+
+**Reverse type compensation**: white text on dark backgrounds appears ~10% smaller and thinner (optical illusion). Compensate: bump weight one level (e.g., 700→800) or add 2-4px to size. This is especially important since card news frequently uses dark-background cards.
+
+**Emphasis by reduction**: dim non-essential text to gray (#888) instead of coloring keywords. The eye is drawn to the brightest element in a field of muted tones. Red for emphasis triggers danger/warning response — use only when that's the intended effect. Within a sentence, accent 1-2 keywords with color + heavier weight; dim the rest.
+
+**Hero numbers as graphic elements**: statistics (120-160px) serve dual roles as both information and the Big visual anchor. A giant "6x" draws the eye before any title text. Weight 900 is reserved for these oversized decorative uses and watermark text.
+
+---
+
+## 6. Color
+
+> Foundation: **Contrast**, **Repetition**
+
+### Selection by relationship and content mood
+
+| Relationship | Best for |
 |---|---|
-| EV Market Status | EV Sales Surge 42% Year-over-Year |
-| Consumer Preferences | 7 in 10 Gen Z Choose Eco-Friendly |
-| Revenue Trends | Q3 Revenue Hits All-Time High at 20B |
+| Complementary (opposites) | High-energy: product launches, shocking statistics |
+| Analogous (adjacent) | Calm: wellness, reflective content, tutorials |
+| Split complement | Sophisticated: analysis, premium thought leadership |
+| Triadic | Dynamic: infographics (requires tint/shade to avoid childish look) |
 
-**Review diagnostic:** Read only the titles across all cards. If you can't understand the story without reading body text, the titles are topic-style and need rewriting.
+### The tint/shade escape from cliché
 
-### Jargon Simplification
+Pure hues carry cultural associations (red+green = Christmas, red+yellow+blue = children's toys). Professional palettes use shades (HSL L=25-40%) or tints (L=65-85%) with reduced saturation (S=40-60%). The color relationship stays; the cliché disappears.
 
-Difficult vocabulary signals insecurity, not expertise. Spotify's investor presentations use language a middle-schooler could follow -- and they're presenting to Wall Street. Simplify jargon at the text preprocessing stage: "ROI maximization" becomes "getting more value for the investment."
+```css
+/* Split complement example — sophisticated analysis tone */
+--color-primary: hsl(220, 45%, 30%);   /* deep navy (shade) */
+--color-accent: hsl(30, 50%, 55%);     /* muted amber */
+--color-neutral: hsl(40, 5%, 96%);     /* warm off-white */
+```
 
-### Question-Answer Pagination
+### Warm/cool weight asymmetry
 
-When you have a surprising statistic, don't waste it on a single card. Split it: Card A asks "How much did it grow in 3 years?" (dark, minimal, tension-building), Card B reveals "6x Growth" (bold, high-impact, giant number). The brain craves resolution once a question is posed -- the two-card structure creates a micro-narrative.
+The fixed 80/20 chromatic ratio should flex by temperature:
+- **Warm accent** (red, orange, yellow): 10-15% surface area — warm colors are visually loud
+- **Cool accent** (blue, green, purple): 20-25% surface area — cool colors need more presence
 
-### Bookending and Cinematic Endings
+Don't aim for equal visual weight between warm and cool — the warm color will always overpower.
 
-Reusing the cover card's visual tone (image, color, mood) on the ending card creates narrative closure -- the series feels like a complete story, not an interrupted list. The ending should carry a vision statement or a resonant quote, never "감사합니다" or "Thank you." Generic closings leave zero emotional residue; a well-chosen closing sentence lingers in the viewer's mind.
+### 3-Color Discipline
+Lock exactly 3 chromatic roles as CSS variables (primary + accent + neutral). Everything else achromatic. Every additional chromatic color dilutes the accent's impact.
 
-### Dimming for Sequential Explanation
-
-When a series of cards explains items from a shared list (e.g., 5 strategies explained one per card), keep all 5 items visible on each card but dim the inactive ones to opacity 0.3. Only the currently-explained item stays at full brightness. This preserves context (the viewer always knows where they are in the list) while forcing attention to the active item.
-
----
-
-## 7. Density & Sizing -- Calibrated Through 4 Iterations
-
-The single most recurring quality issue across all testing rounds was **excessive whitespace**. Professional card news fills 85-95% of the canvas with meaningful content. Empty space doesn't signal elegance in this format -- it signals that the designer ran out of ideas.
-
-These specific values were calibrated through 4 rounds of generate-review-fix cycles at 1080x1350px:
-
-- **Padding:** 36-48px from card edges. Above 50px, the content feels adrift in the middle of the card
-- **Gaps between elements:** 12-24px. Above 28px, the elements feel disconnected from each other
-- **Title font size:** 72-96px. Below 64px, titles lack authority on a 1080-wide canvas
-- **Body text:** 24-28px. Below 22px, text feels like fine print
-- **Illustrations/photos:** 600-900px wide. Below 500px, visuals feel like thumbnails
-- **Background photos:** Must fill the entire frame edge-to-edge. Any visible gap between the photo edge and the card boundary looks like a rendering error
-
-Ending cards deserve special attention: the most common amateur mistake is a sparse ending with just a quote floating in empty space. Endings must be as visually dense and carefully composed as body cards.
-
-**The squint test:** After generating a PNG, squint at it. Large uniform-color areas with no content are dead zones that need to be filled -- enlarge elements, reduce padding, add illustrations, or place a background watermark.
+### Image-derived palettes
+When a card uses a photo, extract the palette from the image rather than imposing a preset. Pick the dominant color, expand via color wheel relationships. This guarantees natural harmony between imagery and typography.
 
 ---
 
-## 8. Watermark & Decoration -- Filling Silence
+## 7. Layout
 
-### Background Typography
+> Foundation: **Proximity**, **Alignment**, **Contrast**
 
-When a card has low text density (covers, dividers, endings), large empty areas can feel barren. Place a thematically relevant English keyword (e.g., "REFORM", "GROWTH", "DESIGN") in weight 900 at an extremely large size (150-200px+) and reduce opacity to 3-5%. On dark backgrounds: rgba(255,255,255,0.03-0.05). On light backgrounds: rgba(0,0,0,0.03).
+### Focal point through dramatic contrast
 
-The result is a subtle texture that the viewer senses without consciously reading -- the space feels *occupied* rather than empty. The watermark should sit behind all content (z-index: 0) with `pointer-events: none` and `user-select: none` to prevent interaction.
+Every card needs one element that's overwhelmingly different from everything else. Not a polite 60-30-10% ratio — a **dramatic** anchor. Hero numbers (120-160px), oversized titles, full-bleed images. It's OK to set body text small if the focal point earns the first glance.
+
+### Content semantics drive layout
+- Timeline / cause-and-effect → LR split (left-to-right = causation)
+- Conclusion + reasoning → TB (headline-then-explanation = downward flow)
+- Title + image + description → Z-pattern (natural scan path)
+
+### Dual-scale design
+Card news is first viewed at ~50% in feed grids, then tapped to full size. After generating, mentally shrink to half — the focal point and title must still be identifiable.
+
+### Asymmetry check
+Empty space on one side of a card might be: (a) trapped white space from alignment failure, or (b) intentional breathing room anchored to a strong flush-left edge. The difference is whether the asymmetry follows an alignment edge. If it does, it's a feature. If it doesn't, fix the alignment.
+
+---
+
+## 8. Background Treatment
+
+> Foundation: **Contrast** (foreground/background hierarchy)
+
+Background is the stage, not the star. When text density rises, actively suppress the background.
+
+- **Title only**: brightness 0.7
+- **Title + 2-3 body lines**: brightness 0.4 + slight blur
+- **5+ dense lines**: brightness 0.2, strong blur, or glassmorphism panel
+
+Gradient masks follow text position (text at bottom → dark gradient from bottom). Use 6-7 opacity stops for a cinematic transition, not a harsh 2-stop cutoff.
+
+Glassmorphism is effective when background context matters (maps, cityscapes) — the viewer senses the environment through the blur without distraction.
+
+---
+
+## 9. Depth & Shadow
+
+> Foundation: **Contrast** (depth hierarchy)
+
+- **Soft shadows only**: alpha 0.1-0.15, wide blur. Sharp dark shadows = amateur.
+- **White glow after rembg on dark cards**: `filter: drop-shadow(0 0 30px rgba(255,255,255,0.2))` — creates backlighting. Use `drop-shadow` (follows silhouette) not `box-shadow` (rectangular).
+- **Z-index layering**: background(0) → gradient(1) → text(3) → cutout(4). Text behind a person cutout creates movie-poster depth.
+
+---
+
+## 10. Content Structure
+
+> Foundation: **Contrast**, **Proximity**
+
+- **Tesla Rule**: titles are conclusions, not topics. "EV Sales Surge 42% YoY" not "EV Market Status." Exception: question-format for explanatory content, event name for announcements.
+- **Jargon simplification**: "ROI maximization" → "getting more value for the investment."
+- **Q&A pagination**: split a surprising stat across two cards — Card A: question (tension), Card B: answer (impact).
+- **Bookending**: match cover and ending visual tone. End with a vision statement, never "감사합니다."
+- **Sequential dimming**: when explaining items from a shared list (one per card), keep all items visible but dim inactive ones to opacity 0.3.
+
+---
+
+## 11. Density & Sizing
+
+> Foundation: **Proximity**, **Contrast**
+
+Card news is an information delivery format — 85-95% canvas utilization is the target. But density should result from intentional Proximity-based grouping, not space-filling.
+
+**Trapped vs intentional white space**: the enemy is trapped white space (accidental gaps from Proximity/Alignment failure). White space anchored to alignment edges and serving a structural role (group separation, breathing room around a focal point) is not a defect.
+
+### Reference values (calibrated through 4 testing iterations at 1080x1350px)
+- Padding: 36-48px | Intra-group gaps: 8-16px | Inter-group gaps: 24-48px
+- Titles: 72-96px | Body: 24-28px | Illustrations: 600-900px wide
+- Background photos: full-bleed edge-to-edge (any gap looks like a rendering error)
+- Ending cards need equal density and care as body cards — sparse endings are the most common amateur mistake
+
+**Squint test (refined)**: look for areas with no structural role — not "empty" areas, but areas that don't serve grouping, contrast, or alignment. Those are dead zones.
+
+---
+
+# Layer 3: Signature Style — Paperology Defaults
+
+These are Paperology-specific techniques, effective defaults for informational content. They are **style choices, not universal principles** — evaluate against content tone.
+
+### Corner Anchors
+Small elements at all four corners (page number, brand, date, "+") create invisible framing.
+- **Apply**: informational, business, political content
+- **Evaluate**: casual, humor
+- **Likely omit**: emotional, memorial, minimal, premium
+
+### Background Typography (Watermark)
+Thematic English keyword, weight 900, 150-200px+, opacity 3-5%, z-index 0.
+- **Apply**: low text-density cards (covers, dividers, endings) where background feels barren
+- **Omit**: high text-density cards (noise), content where understated mood is the point
 
 ### Decorative Shapes
+Geometric elements at opacity 0.08-0.15. Above 0.15, they compete with content.
+- **Apply**: when reinforcing an alignment edge or repetition pattern (structural role)
+- **Omit**: when the motivation is "this area is empty" — ask first whether the space serves Proximity or Contrast
 
-When the four-quadrant balance check reveals an empty area, place subtle geometric elements (circles, lines, dot grids, "+" marks) at opacity 0.08-0.15. They serve as visual ballast -- restoring equilibrium without adding information. Any opacity above 0.15 risks the decorative element competing with actual content.
+---
 
-**Review diagnostic:** If a card feels "empty" despite having content, try adding a background watermark or corner decorations. If a card feels "busy," check whether decorative elements exceed 0.15 opacity.
+# Diagnostic Triage
+
+When a card looks "off," check in Foundation order:
+
+1. **Proximity**: Are related elements grouped? Is there a gap ratio? Squint: how many clusters? (2-4 target)
+2. **Alignment**: One dominant axis? All elements on shared edges? Trapped white space?
+3. **Repetition**: Consistent treatment patterns? Does this card belong with the series?
+4. **Contrast**: Clear focal point? All differences obviously intentional? Any conflict (similar-but-not-same)?
+5. **Typography**: 2-3+ contrast dimensions between hierarchy levels? Uniform density when squinting? Reverse type compensated?
+6. **Color**: Grayscale test pass? Warm/cool ratio appropriate? Tints/shades or raw pure hues?

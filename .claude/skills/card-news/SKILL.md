@@ -70,53 +70,35 @@ Communicate with the user via **AskUserQuestion** at each phase transition.
 
 ---
 
-## Design Principles (Paperology-based tacit knowledge)
+## Design Principles
 
-These principles are what distinguish professional card news from amateur output. They represent non-obvious design decisions learned from Paperology design philosophy and refined through iterative testing.
+Three-layer system: **Foundation** (structural logic) → **Techniques** (execution) → **Signature Style** (Paperology defaults). For deep explanations and examples, consult `references/design-principles.md`.
 
-### Emphasis by Reduction, Not Addition
-Dim non-essential text to gray (#888) instead of coloring keywords. This "gray dimming" technique is counter-intuitive but produces far more sophisticated results than colored highlights. Avoid red for general emphasis -- it signals danger. However, red can be used deliberately for urgency or confrontational messaging where that danger signal is the intended effect.
+### Foundation: CRAP (apply in this order)
+1. **Proximity** -- Related elements close, unrelated elements far. Gap ratio ~3:1 (intra-group 8-16px, inter-group 32-48px). Squint test: 2-4 visual clusters per card.
+2. **Alignment** -- Every element on an invisible shared edge. One alignment axis per card (flush-left default for body cards). No trapped white space between misaligned elements.
+3. **Repetition** -- Lock all design tokens in `:root` CSS variables (colors, spacing, typography). Same treatment patterns across the entire series. Repetition is what makes 8-10 cards feel like one brand.
+4. **Contrast** -- If not the same, make VERY different. Weight gap minimum 200 units (400+800 good, 400+500 = conflict). Size ratio minimum 2:1. Stack 2-3 contrast dimensions per hierarchy level (size + weight + form). Don't be timid.
 
-### Titles Are Conclusions, Not Topics (Tesla Rule)
-Bad: "Temperature and Humidity Effects" / Good: "25C and 60% Humidity Are Essential for Growth"
-Exception: Explanatory content can use question-format titles ("[What does this law do?]") and event content can lead with the event name + date. Match the title format to the content's purpose: persuade→conclusion, explain→question, announce→event.
+### Key Techniques
+- **Emphasis by reduction**: Dim non-essential text to gray (#888) instead of coloring keywords. Accent 1-2 keywords only.
+- **Titles as conclusions (Tesla Rule)**: Bad: "EV Market Status" / Good: "EV Sales Surge 42% YoY." Exception: question-format for explanatory, event name for announcements.
+- **Color selection**: Choose colors by wheel relationship (complementary→energy, analogous→calm, split complement→sophistication). Shift to tints/shades (HSL L=25-40% or 65-85%) to escape cliché. Warm accents need less area (10-15%), cool need more (20-25%).
+- **Typography contrast**: 5 dimensions available with Paperlogy -- Size, Weight, Form (caps/lowercase), Typographic color (density), Direction. Each hierarchy level differs in 2-3 dimensions simultaneously. Reverse type (white on dark) needs heavier weight / larger size.
+- **Background as stage**: Suppress when text density is high. Gradient masks follow text position. Glassmorphism for complex backgrounds.
+- **Density**: 85-95% canvas utilization. Enemy is trapped white space (accidental gaps), not white space itself. Padding 36-48px, titles 72-96px, body 24-28px, illustrations 600-900px. Background photos full-bleed.
+- **Bookending**: Match cover and ending card visual tone. End with vision statement, never "감사합니다."
 
-### Density Is Quality
-The #1 recurring quality issue is excessive whitespace. Professional card news typically fills 85-95% of the canvas -- though memorial, respectful, or contemplative content can use intentional whitespace as an emotional device. Sizing guidelines learned through 4 iterations at 1080x1350:
-- Padding: 36-48px (never >50). Gaps: 12-24px (never >28)
-- Titles: 72-96px. Illustrations/photos: 600-900px wide
-- Background photos must fill the entire frame edge-to-edge
-- **Squint test**: Read the PNG and squint. Large uniform-color areas with no content are dead zones
+### Signature Style (Paperology defaults -- evaluate per content tone)
+- **Corner Anchors**: Apply for informational/business. Evaluate for casual. Likely omit for emotional/minimal.
+- **Background Typography**: Weight 900, 150-200px, opacity 3-5% for low-density cards. Omit when text density is already high.
+- **Decorative Shapes**: Opacity 0.08-0.15, only when serving a structural role. Don't fill space just because it's empty.
 
-### Background Is Stage, Not Star
-When text density is high, suppress the background (darken, blur, overlay). Always use gradient masks behind text over photos. Use glassmorphism panels for structured content over complex backgrounds.
-
-### Character Consistency Across Series
-The biggest visual quality issue in AI-illustrated series is inconsistent character/style across cards. Always provide the first card's finalized illustration as `--refs` for every subsequent generation, with explicit prompts: "same character, identical rendering style, same color temperature."
-
-### Visual Review Loop (Never Skip)
-Generate HTML -> convert to PNG -> Read every PNG -> check density, sizing consistency, illustration style, ending card fullness -> fix across ALL HTMLs at once -> reconvert -> re-read. This self-review catches issues before showing to the user.
-
-### 3-Color Discipline
-Lock 3 colors as CSS variables (primary + accent + neutral). 80% neutral tones, 20% accent. Extract dominant color from brand/topic.
-
-### Bookending and Cinematic Endings
-Open and close the series with matching visual tone. End with a vision statement or quote -- never "감사합니다" or "Thank you."
-
-### Corner Anchors
-Place small elements at all 4 corners (page number, brand name, date, decorative mark "+") for visual stability and framing.
-
-### Font Weight as Hierarchy
-Paperlogy 9 weights (100-900) in `assets/fonts/`. Use max 3 weights per card with strong contrast (400+800 good, 400+500 bad). Titles get letter-spacing -0.03 to -0.05em for chunky impact. Use weight 100 at 5% opacity for background watermark text.
-
-### Tool Role Division
-- **Pillow** (process_photo.py): mechanical, precise operations (crop, resize, composite, grayscale)
-- **Nano Banana** (generate_image.py --input): creative AI edits (color grading, style transfer, mood change)
-- **CSS filters**: render-time effects (grayscale, brightness, hue-rotate, blur, sepia)
-- **rembg**: background removal for cutouts
-
-### Edit, Don't Regenerate
-If a Nano Banana image is 80% satisfactory, use edit mode (`--input`) to refine rather than regenerating from scratch.
+### Operational
+- **Character Consistency**: First card's finalized illustration as `--refs` for all subsequent generations.
+- **Visual Review Loop (Never Skip)**: Generate HTML → PNG → Read every PNG → check against Foundation diagnostics → fix ALL HTMLs at once → reconvert → re-read.
+- **Tool Roles**: Pillow = mechanical precision. Nano Banana = creative AI edits. CSS filters = render-time effects. rembg = background removal.
+- **Edit, Don't Regenerate**: If a Nano Banana image is 80% satisfactory, use `--input` to refine.
 
 ---
 
