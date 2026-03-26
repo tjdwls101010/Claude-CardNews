@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Card News Editor</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a1a1a;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* 좌측: 카드 프리뷰 */
+  .preview-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    padding: 20px;
+    position: relative;
+  }
+
+  .card-container {
+    position: relative;
+    transform-origin: top center;
+    box-shadow: 0 0 40px rgba(0,0,0,0.5);
+  }
+
+  .card-container iframe {
+    border: none;
+    display: block;
+  }
+
+  /* 드래그/리사이즈 오버레이 */
+  .element-overlay {
+    position: absolute;
+    cursor: move;
+    border: 2px solid transparent;
+    transition: border-color 0.15s;
+  }
+
+  .element-overlay:hover,
+  .element-overlay.active {
+    border-color: #4a9eff;
+    background: rgba(74, 158, 255, 0.08);
+  }
+
+  .element-overlay .label {
+    position: absolute;
+    top: -22px;
+    left: 0;
+    background: #4a9eff;
+    color: #fff;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+    display: none;
+    pointer-events: none;
+  }
+
+  .element-overlay:hover .label,
+  .element-overlay.active .label {
+    display: block;
+  }
+
+  /* 리사이즈 핸들 */
+  .resize-handle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #4a9eff;
+    border: 1px solid #fff;
+    border-radius: 2px;
+    display: none;
+  }
+
+  .element-overlay:hover .resize-handle,
+  .element-overlay.active .resize-handle {
+    display: block;
+  }
+
+  .resize-handle.br { bottom: -5px; right: -5px; cursor: nwse-resize; }
+  .resize-handle.bl { bottom: -5px; left: -5px; cursor: nesw-resize; }
+  .resize-handle.tr { top: -5px; right: -5px; cursor: nesw-resize; }
+  .resize-handle.tl { top: -5px; left: -5px; cursor: nwse-resize; }
+
+  /* 우측: 패널 */
+  .panel {
+    width: 320px;
+    background: #252525;
+    border-left: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 16px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-header h2 {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .file-btn {
+    background: #4a9eff;
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .file-btn:hover { background: #3a8eef; }
+
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  .section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    margin-bottom: 8px;
+    margin-top: 16px;
+  }
+
+  .section-title:first-child { margin-top: 0; }
+
+  /* 요소 목록 */
+  .element-list {
+    list-style: none;
+  }
+
+  .element-list li {
+    padding: 8px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .element-list li:hover { background: #333; }
+  .element-list li.selected { background: #3a3a5a; border: 1px solid #4a9eff; }
+
+  .element-list li .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* CSS 속성 편집 */
+  .prop-group {
+    margin-bottom: 12px;
+  }
+
+  .prop-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .prop-row label {
+    font-size: 12px;
+    color: #aaa;
+    width: 80px;
+    flex-shrink: 0;
+  }
+
+  .prop-row input {
+    flex: 1;
+    background: #333;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: 'SF Mono', 'Monaco', monospace;
+  }
+
+  .prop-row input:focus {
+    outline: none;
+    border-color: #4a9eff;
+  }
+
+  /* CSS 출력 */
+  .css-output {
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 10px;
+    font-family: 'SF Mono', 'Monaco', monospace;
+    font-size: 11px;
+    color: #8bc34a;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 200px;
+    overflow-y: auto;
+    line-height: 1.5;
+  }
+
+  .copy-btn {
+    background: #333;
+    color: #aaa;
+    border: 1px solid #444;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-top: 8px;
+    width: 100%;
+  }
+
+  .copy-btn:hover { background: #444; color: #fff; }
+  .copy-btn.copied { background: #2d5a2d; color: #8bc34a; border-color: #8bc34a; }
+
+  /* 줌 컨트롤 */
+  .zoom-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #333;
+    padding: 6px 12px;
+    border-radius: 20px;
+  }
+
+  .zoom-controls button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 2px 8px;
+  }
+
+  .zoom-controls span {
+    font-size: 12px;
+    color: #aaa;
+    min-width: 40px;
+    text-align: center;
+  }
+
+  .empty-state {
+    color: #666;
+    text-align: center;
+    padding: 40px 20px;
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .empty-state kbd {
+    background: #333;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    border: 1px solid #444;
+  }
+</style>
+</head>
+<body>
+
+<div class="preview-area" id="previewArea">
+  <div id="emptyState" class="empty-state">
+    카드 HTML 파일을 열어주세요<br><br>
+    우측 상단 <kbd>파일 열기</kbd> 버튼 클릭
+  </div>
+  <div class="card-container" id="cardContainer" style="display:none;">
+    <iframe id="cardFrame" width="1080" height="1350"></iframe>
+  </div>
+  <div class="zoom-controls" id="zoomControls" style="display:none;">
+    <button onclick="zoom(-0.05)">-</button>
+    <span id="zoomLevel">50%</span>
+    <button onclick="zoom(0.05)">+</button>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-header">
+    <h2>Card Editor</h2>
+    <input type="file" id="fileInput" accept=".html" style="display:none;">
+    <button class="file-btn" onclick="document.getElementById('fileInput').click()">파일 열기</button>
+  </div>
+  <div class="panel-body" id="panelBody">
+    <div class="empty-state" style="padding: 20px 0;">
+      파일을 먼저 열어주세요
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentScale = 0.5;
+  let selectedElement = null;
+  let elements = [];
+  let overlays = [];
+  let iframeDoc = null;
+  let cardHtmlContent = '';
+  let changes = {};  // selector -> { prop: value }
+
+  const EDITABLE_SELECTORS = [
+    { selector: '.cutout-person', label: '인물 컷아웃', color: '#ff6b6b' },
+    { selector: '.cutout-photo', label: '인물 컷아웃', color: '#ff6b6b' },
+    { selector: '.bg-photo', label: '배경 사진', color: '#ffa94d' },
+    { selector: '.bg-blur img', label: '모션블러 배경', color: '#ffa94d' },
+    { selector: '.content', label: '텍스트 콘텐츠', color: '#69db7c' },
+    { selector: '.text-content', label: '텍스트 콘텐츠', color: '#69db7c' },
+    { selector: '.top-banner', label: '상단 배너', color: '#da77f2' },
+    { selector: '.center-text', label: '중앙 텍스트', color: '#ffd43b' },
+    { selector: '.bottom-content', label: '하단 콘텐츠', color: '#74c0fc' },
+    { selector: '.bottom-bar', label: '하단 바', color: '#e599f7' },
+    { selector: '.logo', label: '로고', color: '#63e6be' },
+    { selector: '.main-text', label: '메인 텍스트', color: '#ffd43b' },
+    { selector: '.main-title', label: '메인 타이틀', color: '#ffd43b' },
+    { selector: '.info-row', label: '정보 영역', color: '#74c0fc' },
+    { selector: '.info-bars', label: '정보 바', color: '#74c0fc' },
+    { selector: '.gradient-overlay', label: '그라디언트', color: '#868e96' },
+    { selector: '.dark-overlay', label: '어둡기 오버레이', color: '#868e96' },
+    { selector: '.tent-protest', label: '천막 농성', color: '#ff922b' },
+    { selector: '.party-name', label: '당명', color: '#63e6be' },
+    { selector: '.highlight-text', label: '강조 텍스트', color: '#ff6b6b' },
+    { selector: '.sub-text', label: '서브 텍스트', color: '#74c0fc' },
+    { selector: '.subtitle', label: '부제목', color: '#74c0fc' },
+    { selector: '.signature', label: '서명', color: '#da77f2' },
+  ];
+
+  // 파일 열기
+  document.getElementById('fileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const text = await file.text();
+    cardHtmlContent = text;
+    changes = {};
+    loadCard(text, file.name);
+  });
+
+  function loadCard(html, fileName) {
+    document.getElementById('emptyState').style.display = 'none';
+    const container = document.getElementById('cardContainer');
+    container.style.display = 'block';
+    document.getElementById('zoomControls').style.display = 'flex';
+
+    const iframe = document.getElementById('cardFrame');
+
+    // 카드 크기 파싱
+    const widthMatch = html.match(/width:\s*(\d+)px/);
+    const heightMatch = html.match(/height:\s*(\d+)px/);
+    const cardW = widthMatch ? parseInt(widthMatch[1]) : 1080;
+    const cardH = heightMatch ? parseInt(heightMatch[1]) : 1350;
+    iframe.width = cardW;
+    iframe.height = cardH;
+
+    // iframe에 로드
+    iframe.srcdoc = html;
+    iframe.onload = () => {
+      iframeDoc = iframe.contentDocument;
+      applyScale();
+      discoverElements();
+      buildPanel(fileName);
+      createOverlays();
+    };
+  }
+
+  function applyScale() {
+    const container = document.getElementById('cardContainer');
+    container.style.transform = `scale(${currentScale})`;
+    document.getElementById('zoomLevel').textContent = Math.round(currentScale * 100) + '%';
+  }
+
+  function zoom(delta) {
+    currentScale = Math.max(0.2, Math.min(1, currentScale + delta));
+    applyScale();
+    updateOverlayPositions();
+  }
+
+  // 편집 가능한 요소 탐색
+  function discoverElements() {
+    elements = [];
+    EDITABLE_SELECTORS.forEach(({ selector, label, color }) => {
+      const el = iframeDoc.querySelector(selector);
+      if (el) {
+        elements.push({ el, selector, label, color });
+      }
+    });
+  }
+
+  // 오버레이 생성
+  function createOverlays() {
+    overlays.forEach(o => o.remove());
+    overlays = [];
+
+    const container = document.getElementById('cardContainer');
+
+    elements.forEach((item, idx) => {
+      const overlay = document.createElement('div');
+      overlay.className = 'element-overlay';
+      overlay.dataset.index = idx;
+
+      const labelEl = document.createElement('div');
+      labelEl.className = 'label';
+      labelEl.textContent = item.label;
+      overlay.appendChild(labelEl);
+
+      // 리사이즈 핸들
+      ['br', 'bl', 'tr', 'tl'].forEach(pos => {
+        const handle = document.createElement('div');
+        handle.className = `resize-handle ${pos}`;
+        handle.dataset.handle = pos;
+        overlay.appendChild(handle);
+      });
+
+      container.appendChild(overlay);
+      overlays.push(overlay);
+
+      // 드래그 이벤트
+      setupDrag(overlay, item, idx);
+    });
+
+    updateOverlayPositions();
+  }
+
+  function updateOverlayPositions() {
+    const iframe = document.getElementById('cardFrame');
+    const iframeRect = iframe.getBoundingClientRect();
+    const containerRect = document.getElementById('cardContainer').getBoundingClientRect();
+
+    elements.forEach((item, idx) => {
+      const el = item.el;
+      const rect = el.getBoundingClientRect();
+      const overlay = overlays[idx];
+      if (!overlay) return;
+
+      // iframe 내부 좌표를 컨테이너 기준으로 변환
+      overlay.style.left = (rect.left - iframeRect.left) / currentScale + 'px';
+      overlay.style.top = (rect.top - iframeRect.top) / currentScale + 'px';
+      overlay.style.width = rect.width / currentScale + 'px';
+      overlay.style.height = rect.height / currentScale + 'px';
+    });
+  }
+
+  function setupDrag(overlay, item, idx) {
+    let startX, startY, startProps;
+    let mode = 'move'; // 'move' or 'resize-XX'
+
+    const onMouseDown = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      selectElement(idx);
+
+      if (e.target.dataset.handle) {
+        mode = 'resize-' + e.target.dataset.handle;
+      } else {
+        mode = 'move';
+      }
+
+      startX = e.clientX;
+      startY = e.clientY;
+
+      const cs = iframeDoc.defaultView.getComputedStyle(item.el);
+      startProps = {
+        top: parseFloat(cs.top) || 0,
+        left: parseFloat(cs.left) || 0,
+        bottom: parseFloat(cs.bottom) || 0,
+        right: parseFloat(cs.right) || 0,
+        width: parseFloat(cs.width) || 0,
+        height: parseFloat(cs.height) || 0,
+        widthPercent: item.el.style.width && item.el.style.width.includes('%')
+          ? parseFloat(item.el.style.width) : null,
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    };
+
+    const onMouseMove = (e) => {
+      const dx = (e.clientX - startX) / currentScale;
+      const dy = (e.clientY - startY) / currentScale;
+
+      const el = item.el;
+      const cs = iframeDoc.defaultView.getComputedStyle(el);
+
+      if (mode === 'move') {
+        // position 방식 판별
+        const hasBottom = el.style.bottom || (cs.bottom !== 'auto' && cs.top === 'auto');
+        const hasRight = el.style.right || (cs.right !== 'auto' && cs.left === 'auto');
+        const hasTransform = cs.transform && cs.transform !== 'none';
+
+        if (hasBottom) {
+          el.style.bottom = (startProps.bottom - dy) + 'px';
+        } else {
+          el.style.top = (startProps.top + dy) + 'px';
+        }
+
+        if (hasTransform && el.style.left === '50%') {
+          // translateX 기반 중앙 정렬 — transform 퍼센트 조정
+          const currentTransform = cs.transform;
+          const pxOffset = dx;
+          const widthPx = startProps.width;
+          const percentShift = (pxOffset / widthPx) * 100;
+          const basePercent = parseFloat(item._baseTranslateX || '-50');
+          const newPercent = basePercent + percentShift;
+          el.style.transform = `translateX(${newPercent}%)`;
+          item._baseTranslateX = newPercent;
+        } else if (hasRight) {
+          el.style.right = (startProps.right - dx) + 'px';
+        } else {
+          el.style.left = (startProps.left + dx) + 'px';
+        }
+      } else if (mode.startsWith('resize-')) {
+        const handle = mode.split('-')[1];
+        if (handle === 'br' || handle === 'tr') {
+          if (startProps.widthPercent !== null) {
+            const parentW = parseFloat(iframeDoc.defaultView.getComputedStyle(el.parentElement).width);
+            const newW = startProps.width + dx;
+            el.style.width = (newW / parentW * 100) + '%';
+          } else {
+            el.style.width = (startProps.width + dx) + 'px';
+          }
+        }
+        if (handle === 'bl' || handle === 'tl') {
+          if (startProps.widthPercent !== null) {
+            const parentW = parseFloat(iframeDoc.defaultView.getComputedStyle(el.parentElement).width);
+            const newW = startProps.width - dx;
+            el.style.width = (newW / parentW * 100) + '%';
+          } else {
+            el.style.width = (startProps.width - dx) + 'px';
+          }
+        }
+      }
+
+      trackChange(item);
+      updateOverlayPositions();
+      updatePropsPanel(idx);
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    overlay.addEventListener('mousedown', onMouseDown);
+  }
+
+  function trackChange(item) {
+    const cs = iframeDoc.defaultView.getComputedStyle(item.el);
+    const props = {};
+
+    ['top', 'left', 'right', 'bottom', 'width', 'height', 'transform'].forEach(p => {
+      const inline = item.el.style[p];
+      if (inline) {
+        props[p] = inline;
+      }
+    });
+
+    if (Object.keys(props).length > 0) {
+      changes[item.selector] = props;
+    }
+
+    updateCssOutput();
+  }
+
+  // 패널 구성
+  function buildPanel(fileName) {
+    const body = document.getElementById('panelBody');
+    body.innerHTML = '';
+
+    // 파일명
+    const fileLabel = document.createElement('div');
+    fileLabel.style.cssText = 'font-size:12px; color:#888; margin-bottom:12px; word-break:break-all;';
+    fileLabel.textContent = fileName;
+    body.appendChild(fileLabel);
+
+    // 요소 목록
+    const title1 = document.createElement('div');
+    title1.className = 'section-title';
+    title1.textContent = '편집 가능한 요소';
+    body.appendChild(title1);
+
+    const list = document.createElement('ul');
+    list.className = 'element-list';
+    list.id = 'elementList';
+
+    elements.forEach((item, idx) => {
+      const li = document.createElement('li');
+      li.dataset.index = idx;
+      li.onclick = () => selectElement(idx);
+
+      const dot = document.createElement('span');
+      dot.className = 'dot';
+      dot.style.background = item.color;
+      li.appendChild(dot);
+
+      const text = document.createElement('span');
+      text.textContent = `${item.label}`;
+      li.appendChild(text);
+
+      const sel = document.createElement('span');
+      sel.style.cssText = 'margin-left:auto; font-size:10px; color:#666; font-family:monospace;';
+      sel.textContent = item.selector;
+      li.appendChild(sel);
+
+      list.appendChild(li);
+    });
+
+    body.appendChild(list);
+
+    // 속성 패널
+    const title2 = document.createElement('div');
+    title2.className = 'section-title';
+    title2.textContent = '속성';
+    body.appendChild(title2);
+
+    const propsDiv = document.createElement('div');
+    propsDiv.id = 'propsPanel';
+    propsDiv.innerHTML = '<div style="color:#666; font-size:12px;">요소를 선택하세요</div>';
+    body.appendChild(propsDiv);
+
+    // CSS 변경사항
+    const title3 = document.createElement('div');
+    title3.className = 'section-title';
+    title3.textContent = '변경된 CSS';
+    body.appendChild(title3);
+
+    const cssOut = document.createElement('div');
+    cssOut.className = 'css-output';
+    cssOut.id = 'cssOutput';
+    cssOut.textContent = '아직 변경 없음';
+    body.appendChild(cssOut);
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-btn';
+    copyBtn.textContent = 'CSS 복사';
+    copyBtn.onclick = () => {
+      const text = document.getElementById('cssOutput').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        copyBtn.textContent = '복사됨!';
+        copyBtn.classList.add('copied');
+        setTimeout(() => {
+          copyBtn.textContent = 'CSS 복사';
+          copyBtn.classList.remove('copied');
+        }, 1500);
+      });
+    };
+    body.appendChild(copyBtn);
+  }
+
+  function selectElement(idx) {
+    selectedElement = idx;
+
+    // 목록 하이라이트
+    document.querySelectorAll('#elementList li').forEach((li, i) => {
+      li.classList.toggle('selected', i === idx);
+    });
+
+    // 오버레이 하이라이트
+    overlays.forEach((o, i) => {
+      o.classList.toggle('active', i === idx);
+    });
+
+    updatePropsPanel(idx);
+  }
+
+  function updatePropsPanel(idx) {
+    const panel = document.getElementById('propsPanel');
+    if (idx === null || idx === undefined) return;
+
+    const item = elements[idx];
+    const cs = iframeDoc.defaultView.getComputedStyle(item.el);
+
+    const editableProps = [
+      { key: 'top', label: 'top' },
+      { key: 'bottom', label: 'bottom' },
+      { key: 'left', label: 'left' },
+      { key: 'right', label: 'right' },
+      { key: 'width', label: 'width' },
+      { key: 'height', label: 'height' },
+      { key: 'transform', label: 'transform' },
+      { key: 'padding', label: 'padding' },
+      { key: 'fontSize', label: 'font-size', cssProp: 'font-size' },
+    ];
+
+    panel.innerHTML = '';
+
+    editableProps.forEach(({ key, label, cssProp }) => {
+      const value = item.el.style[key] || cs.getPropertyValue(cssProp || label) || 'auto';
+      if (value === 'auto' || value === 'none' || value === 'normal') return;
+
+      const row = document.createElement('div');
+      row.className = 'prop-row';
+
+      const lbl = document.createElement('label');
+      lbl.textContent = label;
+      row.appendChild(lbl);
+
+      const input = document.createElement('input');
+      input.value = value;
+      input.addEventListener('change', () => {
+        item.el.style[key] = input.value;
+        trackChange(item);
+        updateOverlayPositions();
+      });
+      row.appendChild(input);
+
+      panel.appendChild(row);
+    });
+  }
+
+  function updateCssOutput() {
+    const output = document.getElementById('cssOutput');
+    if (Object.keys(changes).length === 0) {
+      output.textContent = '아직 변경 없음';
+      return;
+    }
+
+    let css = '';
+    for (const [selector, props] of Object.entries(changes)) {
+      css += `${selector} {\n`;
+      for (const [prop, value] of Object.entries(props)) {
+        const cssProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
+        css += `  ${cssProp}: ${value};\n`;
+      }
+      css += '}\n\n';
+    }
+
+    output.textContent = css.trim();
+  }
+
+  // 키보드 단축키
+  document.addEventListener('keydown', (e) => {
+    if (selectedElement === null) return;
+    if (e.target.tagName === 'INPUT') return;
+
+    const item = elements[selectedElement];
+    const cs = iframeDoc.defaultView.getComputedStyle(item.el);
+    const step = e.shiftKey ? 10 : 1;
+
+    const hasBottom = item.el.style.bottom || (cs.bottom !== 'auto' && cs.top === 'auto');
+
+    switch(e.key) {
+      case 'ArrowUp':
+        e.preventDefault();
+        if (hasBottom) {
+          item.el.style.bottom = (parseFloat(cs.bottom) + step) + 'px';
+        } else {
+          item.el.style.top = (parseFloat(cs.top) - step) + 'px';
+        }
+        break;
+      case 'ArrowDown':
+        e.preventDefault();
+        if (hasBottom) {
+          item.el.style.bottom = (parseFloat(cs.bottom) - step) + 'px';
+        } else {
+          item.el.style.top = (parseFloat(cs.top) + step) + 'px';
+        }
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        item.el.style.left = (parseFloat(cs.left) - step) + 'px';
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        item.el.style.left = (parseFloat(cs.left) + step) + 'px';
+        break;
+      default:
+        return;
+    }
+
+    trackChange(item);
+    updateOverlayPositions();
+    updatePropsPanel(selectedElement);
+  });
+
+  // 윈도우 리사이즈시 오버레이 갱신
+  window.addEventListener('resize', () => {
+    if (elements.length > 0) {
+      updateOverlayPositions();
+    }
+  });
+</script>
+</body>
+</html>
