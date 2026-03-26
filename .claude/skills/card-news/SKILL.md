@@ -53,7 +53,7 @@ Communicate with the user via **AskUserQuestion** at each phase transition.
 
 ### Phase 2: Design Planning
 - **If user provided reference design images:** Read each image to analyze its visual language -- color palette, background treatment (dark/light/textured), layout structure, typography weight and spacing, overall emotional tone. Extract these as the style direction for the current project. The reference images tell you *what style to aim for*; the design principles tell you *why it works*.
-- 3-color palette (primary + accent + neutral), lock as CSS variables
+- 3-color palette (primary + accent + neutral), lock as CSS variables in `style.css`
 - Match visual tone to content emotion -- not all content is dark and dramatic. Serious politics can be dark navy; informational content can be light and clean; memorial content can be soft and muted; youth/casual content can be bright and playful
 - Match layout pattern to content semantics (timeline->LR, narrative->TB, comparison->Z)
 - Choose illustration aspect ratios per card based on placement
@@ -66,10 +66,11 @@ Communicate with the user via **AskUserQuestion** at each phase transition.
 **Path B -- AI illustrations:** Generate 2-3 style variations in batch -> AskUserQuestion to pick style -> fine-tune with edit mode -> use first card's image as `--refs` for ALL subsequent cards to maintain character/style consistency -> rembg for background removal on dark cards
 
 ### Phase 4: HTML Generation + Visual Review Loop
-1. Generate all HTML cards (images as separate files, NOT base64)
-2. Convert all to PNG with html_to_png.py
-3. **Read every PNG** to visually evaluate
-4. If density/sizing/consistency issues found: fix CSS across ALL HTMLs at once, reconvert, re-read
+1. Generate a shared `style.css` first (design tokens, layout, typography)
+2. Generate HTML cards that link to `style.css` via `<link rel="stylesheet" href="./style.css">` — HTML contains only structure and content, no `<style>` tags
+3. Convert all to PNG with html_to_png.py
+4. **Read every PNG** to visually evaluate
+5. If density/sizing/consistency issues found: fix `style.css` once → reconvert all cards → re-read
 5. Repeat until all cards pass inspection
 6. -> **AskUserQuestion**: show finals, collect feedback
 
@@ -82,7 +83,7 @@ Three-layer system: **Foundation** (structural logic) → **Techniques** (execut
 ### Foundation: CRAP (apply in this order)
 1. **Proximity** -- Related elements close, unrelated elements far. Gap ratio ~3:1 (intra-group 8-16px, inter-group 32-48px). Squint test: 2-4 visual clusters per card.
 2. **Alignment** -- Every element on an invisible shared edge. One alignment axis per card (flush-left default for body cards). No trapped white space between misaligned elements.
-3. **Repetition** -- Lock all design tokens in `:root` CSS variables (colors, spacing, typography). Same treatment patterns across the entire series. Repetition is what makes 8-10 cards feel like one brand.
+3. **Repetition** -- Lock all design tokens in `:root` CSS variables inside a shared `style.css`. All cards in a series link to the same stylesheet — change once, apply everywhere. Same treatment patterns across the entire series. Repetition is what makes 8-10 cards feel like one brand.
 4. **Contrast** -- If not the same, make VERY different. Weight gap minimum 200 units (400+800 good, 400+500 = conflict). Size ratio minimum 2:1. Stack 2-3 contrast dimensions per hierarchy level (size + weight + form). Don't be timid.
 
 ### Key Techniques
@@ -110,11 +111,22 @@ Three-layer system: **Foundation** (structural logic) → **Techniques** (execut
 
 ## HTML Rules (only non-obvious ones)
 
+- **CSS in external file**: All styles go in `style.css`, linked via `<link rel="stylesheet" href="./style.css">`. HTML files contain only structure (`<div>`, `<img>`, `<span>`), no `<style>` tags. This enables Chrome DevTools Workspace auto-save for visual fine-tuning, and ensures design consistency across multi-card series.
 - Images as separate files referenced by **relative path** from the HTML file -- never base64, never absolute paths. This ensures cards work in localhost, Cursor Preview, and file:// alike
 - `@font-face` with relative paths to `assets/fonts/` (e.g., `../../fonts/` from a template directory)
 - `word-break: keep-all` for Korean text
 - Fixed viewport: `width:1080px; height:1350px; overflow:hidden; position:relative`
 - After rembg, **always trim** transparent pixels, then apply white glow on dark backgrounds: `filter: drop-shadow(0 0 30px rgba(255,255,255,0.2))`
+
+Typical project structure:
+```
+project/
+├── style.css           ← shared styles (design tokens, layout)
+├── card-01.html        ← structure only, links to style.css
+├── card-02.html
+├── card-03.html
+└── images/             ← photos, cutouts, illustrations
+```
 
 ---
 
