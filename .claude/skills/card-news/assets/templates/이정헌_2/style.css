@@ -1,0 +1,206 @@
+@font-face {
+  font-family: 'Paperlogy';
+  src: url('../../fonts/Paperlogy-9Black.ttf') format('truetype');
+  font-weight: 900;
+}
+@font-face {
+  font-family: 'Paperlogy';
+  src: url('../../fonts/Paperlogy-8ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+}
+@font-face {
+  font-family: 'Paperlogy';
+  src: url('../../fonts/Paperlogy-7Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+@font-face {
+  font-family: 'Paperlogy';
+  src: url('../../fonts/Paperlogy-4Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Yeonwoo';
+  src: url('../../fonts/그리운 사막의 연우체.ttf') format('truetype');
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  width: 1080px;
+  height: 1350px;
+  overflow: hidden;
+  position: relative;
+}
+
+.card {
+  width: 1080px;
+  height: 1350px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 레이어 1: 원본 배경 사진 */
+.bg-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+/* 레이어 2: 어두운 오버레이 */
+.dark-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 2;
+  background:
+    linear-gradient(to top,
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0.4) 40%,
+      rgba(0, 0, 0, 0.15) 60%,
+      rgba(0, 0, 0, 0.2) 100%
+    );
+}
+
+/* 레이어 4: 배경 제거된 인물 컷아웃 (텍스트 위에) */
+.cutout-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* 레이어 5: 상단 검정 배너 */
+.top-banner {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  padding: 20px 40px;
+  text-align: center;
+  z-index: 5;
+}
+
+.top-banner span {
+  font-family: 'Paperlogy', sans-serif;
+  font-weight: 700;
+  font-size: 35px;
+  color: #39FF14;
+  letter-spacing: 2px;
+  word-break: keep-all;
+  white-space: nowrap;
+}
+
+/* 컷아웃 위에 하단 그라디언트 */
+.cutout-gradient {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 4;
+  pointer-events: none;
+  background: linear-gradient(to top,
+    rgba(0, 0, 0, 0.75) 0%,
+    rgba(0, 0, 0, 0.3) 35%,
+    rgba(0, 0, 0, 0.0) 50%
+  );
+}
+
+/* 레이어 3: 중앙 3D 텍스트 (인물 뒤에) */
+.center-text {
+  position: absolute;
+  top: 100px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 3;
+}
+
+.center-text h1 {
+  font-family: 'Paperlogy', sans-serif;
+  font-weight: 900;
+  font-size: 222px;
+  color: rgba(240, 238, 235, 0.92);
+  letter-spacing: 10px;
+  line-height: 1.12;
+  word-break: keep-all;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.15);
+  text-shadow:
+    /* 상단 하이라이트 */
+    0 -1px 0 rgba(255, 255, 255, 0.5),
+    /* 3D 깊이 스택 */
+    0 2px 0 rgba(180, 175, 170, 0.6),
+    0 4px 0 rgba(150, 145, 140, 0.5),
+    0 6px 0 rgba(120, 115, 110, 0.4),
+    0 8px 0 rgba(90, 85, 80, 0.3),
+    /* 바닥 그림자 */
+    0 12px 20px rgba(0, 0, 0, 0.5),
+    0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* 레이어 5: 하단 메시지 영역 */
+.bottom-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 68px 68px 68px;
+  z-index: 5;
+}
+
+.highlight-text {
+  font-family: 'Paperlogy', sans-serif;
+  font-weight: 800;
+  font-size: 70px;
+  color: #39FF14;
+  word-break: keep-all;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.sub-text {
+  font-family: 'Paperlogy', sans-serif;
+  font-weight: 700;
+  font-size: 50px;
+  color: #ffffff;
+  word-break: keep-all;
+  margin-bottom: 48px;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.info-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.info-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info-text span {
+  font-family: 'Paperlogy', sans-serif;
+  font-weight: 400;
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.5px;
+}
+
+.signature {
+  font-family: 'Yeonwoo', cursive;
+  font-size: 72px;
+  color: #ffffff;
+  letter-spacing: 14px;
+  line-height: 1;
+}
