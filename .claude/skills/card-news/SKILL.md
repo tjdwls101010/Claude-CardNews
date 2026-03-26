@@ -103,7 +103,9 @@ Three-layer system: **Foundation** (structural logic) → **Techniques** (execut
 
 ### Operational
 - **Character Consistency**: First card's finalized illustration as `--refs` for all subsequent generations.
-- **Visual Review Loop (Never Skip)**: Generate HTML → PNG → Read every PNG → check against Foundation diagnostics → fix ALL HTMLs at once → reconvert → re-read.
+- **Visual Review Loop (Never Skip)**: Generate HTML → PNG → Read every PNG → diagnose → fix ALL HTMLs at once → reconvert → re-read. Diagnose on two levels:
+  1. **Structural**: Are all intended elements present? Do layout sections, alignment axes, and spacing groups match the design intent?
+  2. **Visual weight hierarchy**: Do adjacent elements carry *different* visual weight? If two text blocks feel equally heavy, the hierarchy is broken regardless of whether the structure is correct. Check that emphasis elements (larger size, deeper shadow, bolder weight, stronger color) actually *feel* dominant — not just nominally different. When reproducing a reference image, compare not just element placement but size *ratios*, shadow *depth*, and color *intensity* between the reference and the output.
 - **Tool Roles**: Pillow = mechanical precision. Nano Banana = creative AI edits. CSS filters = render-time effects. rembg = background removal.
 - **Edit, Don't Regenerate**: If a Nano Banana image is 80% satisfactory, use `--input` to refine.
 
